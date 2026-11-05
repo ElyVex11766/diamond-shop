@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { translations, type Lang, type Dict } from "./translations";
 
 interface Ctx {
@@ -10,8 +10,7 @@ interface Ctx {
 const LanguageContext = createContext<Ctx | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [lang, setLangState] = useState<Lang>(() => {
-    // زبان پیش‌فرض فارسی است، مگر اینکه کاربر قبلاً انگلیسی رو انتخاب کرده باشه
+  const [lang, setLangState] = useState<Lang>(() => {
     const saved = localStorage.getItem("diamond-lang");
     if (saved === "en") return "en";
     return "fa"; // پیش‌فرض: فارسی
