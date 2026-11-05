@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import * as skinview3d from "skinview3d";
 
 interface Props {
@@ -11,17 +11,15 @@ interface Props {
 export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewerRef = useRef<skinview3d.SkinViewer | null>(null);
-  const [animation, setAnimation] = useState<"idle" | "walk">("idle");
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // اگر یوزرنیم خالی بود، استیو بیاد
+    // استفاده از API قوی‌تر mc-heads برای دریافت اسکین
     const targetUsername = username.trim() === "" ? "Steve" : username;
     const skinUrl = `https://mc-heads.net/skin/${targetUsername}`;
 
     try {
-      // ساخت ویوئر
       const viewer = new skinview3d.SkinViewer({
         canvas: canvasRef.current,
         width: width,
@@ -38,9 +36,8 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
         });
       }
 
-      // تنظیمات اولیه
-      viewer.autoRotate = false;
-      viewer.controls.enableZoom = false; // زوم رو غیر فعال کردیم
+      viewer.autoRotate = false; 
+      viewer.controls.enableZoom = true;
       viewer.controls.enableRotate = true;
 
       return () => {
@@ -51,6 +48,7 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
     }
   }, [username, capeUrl, width, height]);
 
+  // دکمه‌های کنترل مدل سه بعدی
   const handleAutoRotate = () => {
     if (viewerRef.current) {
       viewerRef.current.autoRotate = !viewerRef.current.autoRotate;
@@ -60,14 +58,12 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
   const handleWalk = () => {
     if (viewerRef.current) {
       viewerRef.current.animation = new skinview3d.WalkingAnimation();
-      setAnimation("walk");
     }
   };
 
   const handleStand = () => {
     if (viewerRef.current) {
       viewerRef.current.animation = new skinview3d.IdleAnimation();
-      setAnimation("idle");
     }
   };
 
@@ -77,18 +73,15 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
       viewerRef.current.animation = new skinview3d.IdleAnimation();
       viewerRef.current.camera.position.set(0, 0, 60);
       viewerRef.current.camera.rotation.set(0, 0, 0);
-      setAnimation("idle");
     }
   };
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* مدل سه بعدی */}
       <div className="flex justify-center items-center bg-[#05070d] rounded-xl p-4 border border-white/5 w-full min-h-[350px]">
         <canvas ref={canvasRef} />
       </div>
 
-      {/* دکمه‌های زیر مدل */}
       <div className="grid grid-cols-2 gap-2 mt-4 w-full">
         <button 
           onClick={handleAutoRotate} 
