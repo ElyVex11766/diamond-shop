@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "./Button";
 
-// اینترفیس برای رکوردهای لیدربورد
 interface LeaderboardEntry {
   userId: string;
   name: string;
-  contact: string; // پلتفرم ارتباطی
+  contact: string;
   time: number;
   date: string;
 }
 
-// اینترفیس برای ذخیره اطلاعات کاربر (کد و تعداد بازی امروز)
 interface UserSession {
   userId: string;
   dailyPlays: number;
@@ -26,10 +24,10 @@ export function ReactionTest() {
   const [errorMsg, setErrorMsg] = useState("");
   const [userSession, setUserSession] = useState<UserSession | null>(null);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // اصلاح تایپ تایمر برای مرورگر
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number>(0);
 
-  // ۱. لود کردن اطلاعات کاربر و لیدربورد
   useEffect(() => {
     let session: UserSession;
     const savedSession = localStorage.getItem("diamond_user_session");
@@ -54,7 +52,6 @@ export function ReactionTest() {
 
     setUserSession(session);
 
-    // لود کردن لیدربورد
     const savedLb = localStorage.getItem("diamond_reaction_lb");
     if (savedLb) {
       try {
@@ -78,7 +75,6 @@ export function ReactionTest() {
     }
   }, []);
 
-  // ۲. شروع تست
   const startTest = () => {
     if (!name.trim()) {
       setErrorMsg("لطفاً آیدی خود را وارد کنید.");
@@ -100,7 +96,6 @@ export function ReactionTest() {
     }, randomDelay);
   };
 
-  // ۳. مدیریت کلیک
   const handleClickReady = () => {
     if (step === "waiting") {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -119,7 +114,6 @@ export function ReactionTest() {
         setUserSession(updatedSession);
         localStorage.setItem("diamond_user_session", JSON.stringify(updatedSession));
 
-        // آپدیت لیدربورد
         const newEntry: LeaderboardEntry = {
           userId: userSession.userId,
           name: name.trim(),
@@ -139,7 +133,6 @@ export function ReactionTest() {
           updatedLb.push(newEntry);
         }
 
-        // مرتب سازی و برش ۱۰ نفر اول
         updatedLb = updatedLb.sort((a, b) => a.time - b.time).slice(0, 10);
         
         setLeaderboard(updatedLb);
@@ -155,15 +148,12 @@ export function ReactionTest() {
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6 relative z-20">
-      
-      {/* فرم اولیه */}
       {step === "idle" && (
         <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 text-center relative z-20">
           <h3 className="text-xl font-bold text-white mb-2">🏆 تست سرعت واکنش</h3>
           <p className="text-sm text-diamond-muted mb-6">برای شرکت در مسابقه، اطلاعات خود را وارد کنید.</p>
           
           <div className="space-y-4">
-            {/* انتخاب پلتفرم و آیدی */}
             <div className="flex gap-2">
               <select 
                 value={contactType} 
@@ -198,7 +188,6 @@ export function ReactionTest() {
         </div>
       )}
 
-      {/* صفحه بازی (قرمز/سبز) */}
       {(step === "waiting" || step === "ready") && (
         <div 
           onClick={handleClickReady}
@@ -214,7 +203,6 @@ export function ReactionTest() {
         </div>
       )}
 
-      {/* نمایش نتیجه */}
       {step === "result" && (
         <div className="bg-diamond-panel border border-diamond-cyan/30 rounded-xl p-6 text-center relative z-20">
           <h3 className="text-xl font-bold text-white mb-2">⚡ زمان واکنش شما:</h3>
@@ -226,10 +214,7 @@ export function ReactionTest() {
         </div>
       )}
 
-      {/* لیدربورد و جوایز */}
       <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 relative z-20">
-        
-        {/* جوایز */}
         <div className="mb-6">
           <h3 className="text-lg font-bold text-white mb-3 text-center">🏆 جوایز هفته</h3>
           <div className="grid grid-cols-3 gap-3">
@@ -280,7 +265,6 @@ export function ReactionTest() {
           )}
         </div>
       </div>
-
     </div>
   );
 }
