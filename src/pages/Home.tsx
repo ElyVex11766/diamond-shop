@@ -42,7 +42,6 @@ export function Home() {
       <section className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-3xl border border-diamond-cyan/30 bg-gradient-to-b from-diamond-panel to-diamond-bg p-6 md:p-10 text-center shadow-glow-sm relative overflow-hidden">
           
-          {/* افکت نورانی پس زمینه */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-diamond-cyan/20 blur-3xl rounded-full pointer-events-none"></div>
 
           <h2 className="text-2xl font-bold text-white mb-2 relative z-10">🎯 تست سرعت واکنش</h2>
