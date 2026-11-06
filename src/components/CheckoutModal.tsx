@@ -70,6 +70,7 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
     setIsSubmitting(true);
 
     try {
+      // 👇 حالا مسیر دقیقاً /api/order هست
       const response = await fetch(`${WORKER_URL}/api/order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
