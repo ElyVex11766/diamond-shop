@@ -5,5 +5,8 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "BOT_KEY": "diamond_shop_for_ever_11766"
   }
 }
