@@ -8,9 +8,9 @@ interface Props {
   product: Product | null;
 }
 
-// ⚠️ این شماره کارت رو با شماره کارت واقعی خودت عوض کن
-const CARD_NUMBER = "1234-5678-9012-3456";
-const CARD_OWNER = "الیاس"; 
+// ✅ شماره کارت و نام صاحب کارت
+const CARD_NUMBER = "6037-6976-2938-7157";
+const CARD_OWNER = "جعفری"; 
 const COUNTDOWN_SECONDS = 120; // ۲ دقیقه
 
 export function CheckoutModal({ isOpen, onClose, product }: Props) {
