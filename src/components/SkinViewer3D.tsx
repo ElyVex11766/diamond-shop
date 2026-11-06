@@ -15,7 +15,6 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // استفاده از API قوی‌تر mc-heads برای دریافت اسکین
     const targetUsername = username.trim() === "" ? "Steve" : username;
     const skinUrl = `https://mc-heads.net/skin/${targetUsername}`;
 
@@ -29,7 +28,6 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
 
       viewerRef.current = viewer;
 
-      // لود کیپ
       if (capeUrl) {
         viewer.loadCape(capeUrl).catch((err) => {
           console.error("خطا در لود کیپ 3D:", err);
@@ -48,7 +46,6 @@ export function SkinViewer3D({ username, capeUrl, width = 300, height = 400 }: P
     }
   }, [username, capeUrl, width, height]);
 
-  // دکمه‌های کنترل مدل سه بعدی
   const handleAutoRotate = () => {
     if (viewerRef.current) {
       viewerRef.current.autoRotate = !viewerRef.current.autoRotate;
