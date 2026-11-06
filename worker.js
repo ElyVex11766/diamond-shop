@@ -1,4 +1,5 @@
-const DISCORD_CHANNEL_ID = "YOUR_CHANNEL_ID_HERE";
+const OWNER_ID = "1520062981407375406";
+const CATEGORY_ID = "1558052714028470282";
 
 export default {
   async fetch(request, env) {
@@ -40,8 +41,46 @@ export default {
 
         const orderId = `ORD-${Date.now()}`;
 
-        const discordPayload = {
-          content: "🛒 **سفارش جدید از سایت!**",
+        // ۱. ساخت تیکت (کانال جدید) در کتگوری
+        const channelResponse = await fetch(
+          `https://discord.com/api/v10/guilds/${env.GUILD_ID}/channels`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bot ${env.BOT_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: `order-${orderId}`,
+              type: 0, // 0 = Text Channel
+              parent_id: CATEGORY_ID,
+              permission_overwrites: [
+                {
+                  id: env.GUILD_ID, // @everyone
+                  type: 0,
+                  deny: "1024", // View Channel = deny
+                },
+                {
+                  id: OWNER_ID,
+                  type: 1,
+                  allow: "1024", // View Channel = allow
+                },
+              ],
+            }),
+          }
+        );
+
+        if (!channelResponse.ok) {
+          const error = await channelResponse.text();
+          throw new Error(`Discord channel creation failed: ${error}`);
+        }
+
+        const channel = await channelResponse.json();
+        const channelId = channel.id;
+
+        // ۲. ارسال پیام سفارش داخل تیکت
+        const embedPayload = {
+          content: `<@${OWNER_ID}> سفارش جدید از سایت!`,
           embeds: [{
             title: `سفارش ${orderId}`,
             color: 0x2f81f7,
@@ -56,23 +95,28 @@ export default {
           }]
         };
 
-        const discordResponse = await fetch(
-          `https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`,
+        const messageResponse = await fetch(
+          `https://discord.com/api/v10/channels/${channelId}/messages`,
           {
             method: "POST",
             headers: {
               "Authorization": `Bot ${env.BOT_KEY}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(discordPayload),
+            body: JSON.stringify(embedPayload),
           }
         );
 
-        if (!discordResponse.ok) {
-          throw new Error(`Discord error: ${discordResponse.status}`);
+        if (!messageResponse.ok) {
+          throw new Error(`Discord message failed: ${messageResponse.status}`);
         }
 
-        return new Response(JSON.stringify({ ok: true, order_id: orderId, message: "سفارش با موفقیت ثبت شد" }), {
+        return new Response(JSON.stringify({ 
+          ok: true, 
+          order_id: orderId, 
+          channel_id: channelId,
+          message: "تیکت با موفقیت ساخته شد" 
+        }), {
           status: 201,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
@@ -83,11 +127,6 @@ export default {
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }
-    }
-
-    // مسیرهای دیگه (مثلاً فایل‌های استاتیک)
-    if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
     }
 
     return new Response("Not found", { status: 404 });
