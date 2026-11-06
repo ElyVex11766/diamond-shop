@@ -17,19 +17,39 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
 
   if (!isOpen || !product) return null;
 
+  // محاسبه قیمت کل
   const totalPrice = product.price * amount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    console.log("Order Placed:", { product, amount, totalPrice, contactType, contactId, phone });
-    
-    setTimeout(() => {
+    try {
+      // آدرس ورکر (از عکسی که فرستادی)
+      const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/";
+
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product: product.name,
+          amount: amount,
+          contact: `${contactType}: ${contactId}`,
+          phone: phone,
+        }),
+      });
+
+      if (!response.ok) throw new Error("خطا در ارسال سفارش");
+
+      // ارسال موفق بود
       setIsSubmitting(false);
       alert("سفارش شما با موفقیت ثبت شد! به زودی با شما تماس می‌گیریم.");
       onClose();
-    }, 1500);
+    } catch (error) {
+      console.error("Error sending order:", error);
+      setIsSubmitting(false);
+      alert("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
+    }
   };
 
   return (
@@ -43,7 +63,7 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* انتخاب مقدار (برای کیپ‌ها و کانفیگ V2Ray نمایش داده میشه) */}
+          {/* انتخاب مقدار */}
           {!product.isSingle && (
             <div className="bg-[#05070d] p-4 rounded-xl border border-white/5">
               <label className="block text-sm text-diamond-muted mb-2">
@@ -59,6 +79,7 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
             </div>
           )}
 
+          {/* انتخاب راه ارتباطی */}
           <div className="bg-[#05070d] p-4 rounded-xl border border-white/5">
             <label className="block text-sm text-diamond-muted mb-2">راه ارتباطی برای ارسال سفارش:</label>
             <div className="flex gap-4 mb-3">
@@ -85,6 +106,7 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
             />
           </div>
 
+          {/* شماره تماس (اختیاری) */}
           <div>
             <input 
               type="tel" 
@@ -95,11 +117,13 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
             />
           </div>
 
+          {/* فاکتور نهایی */}
           <div className="bg-diamond-bg border border-diamond-cyan/30 rounded-xl p-4 flex justify-between items-center shadow-glow-sm">
             <span className="text-sm text-diamond-muted">مبلغ قابل پرداخت:</span>
             <span className="text-xl font-bold text-diamond-cyan">{totalPrice.toLocaleString('fa-IR')} تومان</span>
           </div>
 
+          {/* هشدار و دکمه */}
           <div className="text-center space-y-3">
             <p className="text-xs text-red-400 font-medium">
               ⚠️ لطفاً در وارد کردن آیدی خود دقت کنید. تحویل سفارش بین ۱ تا ۷۲ ساعت زمان می‌برد.
