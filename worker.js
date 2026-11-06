@@ -5,6 +5,7 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
+    // مدیریت CORS
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -16,6 +17,7 @@ export default {
       });
     }
 
+    // تست سلامت
     if (url.pathname === "/api/health" && method === "GET") {
       return new Response(JSON.stringify({ ok: true, status: "operational" }), {
         status: 200,
@@ -23,6 +25,7 @@ export default {
       });
     }
 
+    // ثبت سفارش
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         const data = await request.json();
@@ -80,6 +83,11 @@ export default {
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }
+    }
+
+    // مسیرهای دیگه (مثلاً فایل‌های استاتیک)
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
     }
 
     return new Response("Not found", { status: 404 });
