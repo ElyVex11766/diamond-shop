@@ -1,5 +1,6 @@
 const OWNER_ID = "1520062981407375406";
 const CATEGORY_ID = "1558052714028470282";
+const GUILD_ID = "1551236517442224319";
 
 export default {
   async fetch(request, env) {
@@ -41,9 +42,9 @@ export default {
 
         const orderId = `ORD-${Date.now()}`;
 
-        // ۱. ساخت تیکت (کانال جدید) در کتگوری
+        // ۱. ساخت تیکت (کانال جدید) در کتگوری مشخص‌شده
         const channelResponse = await fetch(
-          `https://discord.com/api/v10/guilds/${env.GUILD_ID}/channels`,
+          `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
           {
             method: "POST",
             headers: {
@@ -56,7 +57,7 @@ export default {
               parent_id: CATEGORY_ID,
               permission_overwrites: [
                 {
-                  id: env.GUILD_ID, // @everyone
+                  id: GUILD_ID, // @everyone
                   type: 0,
                   deny: "1024", // View Channel = deny
                 },
