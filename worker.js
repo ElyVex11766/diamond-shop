@@ -1,62 +1,99 @@
+// ⚠️ این آیدی کانال رو بعداً پر کن (برای ارسال سفارش به دیسکورد)
+const DISCORD_CHANNEL_ID = "YOUR_CHANNEL_ID_HERE";
+
 export default {
   async fetch(request, env) {
-    if (request.method === "OPTIONS") {
+    const url = new URL(request.url);
+    const method = request.method;
+
+    // مدیریت CORS
+    if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },
       });
     }
 
-    if (request.method === "POST") {
+    // 📌 ۱. تست سلامت (Health Check)
+    if (url.pathname === "/api/health" && method === "GET") {
+      return new Response(JSON.stringify({ ok: true, status: "operational" }), {
+        status: 200,
+        headers: { 
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*" 
+        },
+      });
+    }
+
+    // 📌 ۲. مسیر ثبت سفارش از سایت
+    if (url.pathname === "/api/order" && method === "POST") {
       try {
         const data = await request.json();
-        
+        const { product, amount, contact, phone } = data;
+
+        if (!product || !amount || !contact) {
+          return new Response(JSON.stringify({ ok: false, error: "Missing fields" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          });
+        }
+
+        const orderId = `ORD-${Date.now()}`;
+
         const discordPayload = {
           content: "🛒 **سفارش جدید از سایت!**",
           embeds: [{
-            title: "جزئیات سفارش",
+            title: `سفارش ${orderId}`,
             color: 0x2f81f7,
             fields: [
-              { name: "محصول", value: data.product || "نامشخص", inline: true },
-              { name: "تعداد", value: String(data.amount || 1), inline: true },
-              { name: "آیدی کاربر", value: data.contact || "نامشخص", inline: true },
-              { name: "شماره تماس", value: data.phone || "ندارد", inline: false },
+              { name: "محصول", value: String(product), inline: true },
+              { name: "تعداد", value: String(amount), inline: true },
+              { name: "آیدی کاربر", value: String(contact), inline: true },
+              { name: "شماره تماس", value: String(phone || "ندارد"), inline: false },
             ],
             timestamp: new Date().toISOString(),
             footer: { text: "Diamond Shop" }
           }]
         };
 
-        const response = await fetch(env.DISCORD_WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(discordPayload),
+        const discordResponse = await fetch(
+          `https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bot ${env.BOT_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(discordPayload),
+          }
+        );
+
+        if (!discordResponse.ok) {
+          throw new Error(`Discord error: ${discordResponse.status}`);
+        }
+
+        return new Response(JSON.stringify({ 
+          ok: true, 
+          order_id: orderId,
+          message: "سفارش با موفقیت ثبت شد" 
+        }), {
+          status: 201,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
 
-        if (!response.ok) throw new Error(`Discord API error: ${response.status}`);
-
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*" 
-          },
-          status: 200,
-        });
       } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*" 
-          },
+        return new Response(JSON.stringify({ ok: false, error: error.message }), {
           status: 500,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }
     }
 
-    return new Response("Method not allowed", { status: 405 });
+    // بقیه درخواست‌ها
+    return new Response("Not found", { status: 404 });
   },
 };
