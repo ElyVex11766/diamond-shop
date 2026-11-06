@@ -13,6 +13,9 @@ const CARD_NUMBER = "6037-6976-2938-7157";
 const CARD_OWNER = "جعفری"; 
 const COUNTDOWN_SECONDS = 120; // ۲ دقیقه
 
+// ✅ آدرس اصلی سایت (Cloudflare Worker)
+const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
+
 export function CheckoutModal({ isOpen, onClose, product }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
   const [amount, setAmount] = useState(1);
@@ -22,7 +25,6 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(COUNTDOWN_SECONDS);
 
-  // ریست کردن همه چیز وقتی مودال باز یا بسته می‌شه
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -34,10 +36,8 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
     }
   }, [isOpen]);
 
-  // تایمر برای مرحله ۲
   useEffect(() => {
     if (step !== 2) return;
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -47,7 +47,6 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [step]);
 
@@ -55,7 +54,6 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
 
   const totalPrice = product.price * amount;
 
-  // مرحله اول: رفتن به مرحله ۲
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactId.trim()) {
@@ -65,18 +63,14 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
     setStep(2);
   };
 
-  // مرحله دوم: ثبت نهایی
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (timeLeft === 0) return; // اگه زمان تموم شده، کاری نکن
+    if (timeLeft === 0) return;
 
     setIsSubmitting(true);
 
     try {
-      // آدرس ورکر (از عکسی که فرستادی)
-      const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/?v=2";
-
-      const response = await fetch(WORKER_URL, {
+      const response = await fetch(`${WORKER_URL}/api/order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -99,7 +93,6 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
     }
   };
 
-  // فرمت کردن زمان به دقیقه و ثانیه
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -115,7 +108,6 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
           {step === 1 ? `سفارش: ${product.name}` : "تکمیل سفارش و پرداخت"}
         </h3>
 
-        {/* مرحله ۱: فرم اولیه */}
         {step === 1 && (
           <form onSubmit={handleContinue} className="space-y-4">
             {!product.isSingle && (
@@ -180,11 +172,8 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
           </form>
         )}
 
-        {/* مرحله ۲: پرداخت و تایمر */}
         {step === 2 && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {/* نمایش شماره کارت */}
             <div className="bg-[#05070d] p-6 rounded-xl border border-diamond-cyan/30 text-center">
               <h4 className="text-sm text-diamond-muted mb-3">لطفاً مبلغ زیر را به شماره کارت زیر واریز کنید:</h4>
               <div className="text-2xl font-mono font-bold text-white tracking-widest mb-2" dir="ltr">
@@ -197,7 +186,6 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
               </div>
             </div>
 
-            {/* هشدار تایمر */}
             <div className={`text-center p-3 rounded-lg border ${timeLeft > 0 ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
               {timeLeft > 0 ? (
                 <p className="text-sm font-bold">⏳ زمان باقی‌مانده برای ثبت نهایی: <span dir="ltr">{formatTime(timeLeft)}</span></p>
