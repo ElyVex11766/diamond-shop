@@ -24,7 +24,6 @@ export function ReactionTest() {
   const [errorMsg, setErrorMsg] = useState("");
   const [userSession, setUserSession] = useState<UserSession | null>(null);
 
-  // اصلاح تایپ تایمر برای مرورگر
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number>(0);
 
@@ -80,12 +79,10 @@ export function ReactionTest() {
       setErrorMsg("لطفاً آیدی خود را وارد کنید.");
       return;
     }
-
     if (userSession && userSession.dailyPlays >= 5) {
       setErrorMsg("⛔ شما امروز ۵ بار تست داده‌اید. فردا دوباره تلاش کنید!");
       return;
     }
-
     setErrorMsg("");
     setStep("waiting");
     
@@ -103,7 +100,6 @@ export function ReactionTest() {
       setStep("idle");
       return;
     }
-
     if (step === "ready") {
       const reactionTime = Date.now() - startTimeRef.current;
       setResult(reactionTime);
@@ -134,7 +130,6 @@ export function ReactionTest() {
         }
 
         updatedLb = updatedLb.sort((a, b) => a.time - b.time).slice(0, 10);
-        
         setLeaderboard(updatedLb);
         localStorage.setItem("diamond_reaction_lb", JSON.stringify(updatedLb));
       }
@@ -152,111 +147,51 @@ export function ReactionTest() {
         <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 text-center relative z-20">
           <h3 className="text-xl font-bold text-white mb-2">🏆 تست سرعت واکنش</h3>
           <p className="text-sm text-diamond-muted mb-6">برای شرکت در مسابقه، اطلاعات خود را وارد کنید.</p>
-          
           <div className="space-y-4">
             <div className="flex gap-2">
-              <select 
-                value={contactType} 
-                onChange={(e) => setContactType(e.target.value)}
-                className="w-1/3 bg-diamond-bg border border-diamond-border rounded-lg px-2 py-3 text-white focus:outline-none focus:border-diamond-cyan text-sm relative z-30"
-              >
+              <select value={contactType} onChange={(e) => setContactType(e.target.value)} className="w-1/3 bg-diamond-bg border border-diamond-border rounded-lg px-2 py-3 text-white focus:outline-none focus:border-diamond-cyan text-sm relative z-30">
                 <option value="discord">دیسکورد</option>
                 <option value="telegram">تلگرام</option>
                 <option value="rubika">روبیکا</option>
               </select>
-              <input 
-                type="text" 
-                placeholder="آیدی خود را وارد کنید" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)}
-                className="w-2/3 bg-diamond-bg border border-diamond-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-diamond-cyan text-center font-bold relative z-30"
-              />
+              <input type="text" placeholder="آیدی خود را وارد کنید" value={name} onChange={(e) => setName(e.target.value)} className="w-2/3 bg-diamond-bg border border-diamond-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-diamond-cyan text-center font-bold relative z-30" />
             </div>
-            
-            {userSession && (
-              <p className="text-xs text-diamond-cyan font-bold">
-                بازی‌های امروز شما: {userSession.dailyPlays} از ۵
-              </p>
-            )}
-
+            {userSession && (<p className="text-xs text-diamond-cyan font-bold">بازی‌های امروز شما: {userSession.dailyPlays} از ۵</p>)}
             {errorMsg && <p className="text-red-400 text-sm relative z-30">{errorMsg}</p>}
-            
-            <Button onClick={startTest} className="w-full py-3 relative z-30">
-              شروع تست
-            </Button>
+            <Button onClick={startTest} className="w-full py-3 relative z-30">شروع تست</Button>
           </div>
         </div>
       )}
-
       {(step === "waiting" || step === "ready") && (
-        <div 
-          onClick={handleClickReady}
-          className={`w-full h-64 rounded-xl flex items-center justify-center cursor-pointer transition-colors duration-200 select-none relative z-20 ${
-            step === "waiting" 
-              ? "bg-red-500/20 border-2 border-red-500" 
-              : "bg-emerald-500/80 border-2 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)]"
-          }`}
-        >
-          <span className="text-2xl font-extrabold text-white pointer-events-none">
-            {step === "waiting" ? "منتظر بمان..." : "الان کلیک کن!"}
-          </span>
+        <div onClick={handleClickReady} className={`w-full h-64 rounded-xl flex items-center justify-center cursor-pointer transition-colors duration-200 select-none relative z-20 ${step === "waiting" ? "bg-red-500/20 border-2 border-red-500" : "bg-emerald-500/80 border-2 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)]"}`}>
+          <span className="text-2xl font-extrabold text-white pointer-events-none">{step === "waiting" ? "منتظر بمان..." : "الان کلیک کن!"}</span>
         </div>
       )}
-
       {step === "result" && (
         <div className="bg-diamond-panel border border-diamond-cyan/30 rounded-xl p-6 text-center relative z-20">
           <h3 className="text-xl font-bold text-white mb-2">⚡ زمان واکنش شما:</h3>
           <div className="text-5xl font-extrabold text-diamond-cyan mb-4">{result} <span className="text-xl">ms</span></div>
-          
-          <div className="flex gap-3 justify-center">
-            <Button onClick={resetGame} variant="secondary" className="px-6">تلاش دوباره</Button>
-          </div>
+          <div className="flex gap-3 justify-center"><Button onClick={resetGame} variant="secondary" className="px-6">تلاش دوباره</Button></div>
         </div>
       )}
-
       <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 relative z-20">
         <div className="mb-6">
           <h3 className="text-lg font-bold text-white mb-3 text-center">🏆 جوایز هفته</h3>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-center">
-              <div className="text-xl mb-1">🥇</div>
-              <div className="text-[10px] text-yellow-400 font-bold mb-1">نفر اول</div>
-              <div className="text-xs text-white font-bold">کیپ Builder</div>
-            </div>
-            <div className="bg-gray-400/10 border border-gray-400/30 rounded-lg p-3 text-center">
-              <div className="text-xl mb-1">🥈</div>
-              <div className="text-[10px] text-gray-300 font-bold mb-1">نفر دوم</div>
-              <div className="text-xs text-white font-bold">کیپ Optifine</div>
-            </div>
-            <div className="bg-amber-700/10 border border-amber-700/30 rounded-lg p-3 text-center">
-              <div className="text-xl mb-1">🥉</div>
-              <div className="text-[10px] text-amber-500 font-bold mb-1">نفر سوم</div>
-              <div className="text-xs text-white font-bold">۱۰ گیگ V2Ray</div>
-            </div>
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-center"><div className="text-xl mb-1">🥇</div><div className="text-[10px] text-yellow-400 font-bold mb-1">نفر اول</div><div className="text-xs text-white font-bold">کیپ Builder</div></div>
+            <div className="bg-gray-400/10 border border-gray-400/30 rounded-lg p-3 text-center"><div className="text-xl mb-1">🥈</div><div className="text-[10px] text-gray-300 font-bold mb-1">نفر دوم</div><div className="text-xs text-white font-bold">کیپ Optifine</div></div>
+            <div className="bg-amber-700/10 border border-amber-700/30 rounded-lg p-3 text-center"><div className="text-xl mb-1">🥉</div><div className="text-[10px] text-amber-500 font-bold mb-1">نفر سوم</div><div className="text-xs text-white font-bold">۱۰ گیگ V2Ray</div></div>
           </div>
         </div>
-
         <div className="pt-4 border-t border-white/10">
-          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-            <span>📊</span> ۱۰ نفر برتر
-          </h3>
-          
-          {leaderboard.length === 0 ? (
-            <p className="text-sm text-diamond-muted text-center py-2">هنوز کسی رکوردی ثبت نکرده است.</p>
-          ) : (
+          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><span>📊</span> ۱۰ نفر برتر</h3>
+          {leaderboard.length === 0 ? (<p className="text-sm text-diamond-muted text-center py-2">هنوز کسی رکوردی ثبت نکرده است.</p>) : (
             <div className="space-y-2">
               {leaderboard.map((entry, idx) => (
                 <div key={entry.userId} className="flex items-center justify-between bg-diamond-bg/50 p-2.5 rounded-lg border border-white/5">
                   <div className="flex items-center gap-2">
-                    <span className={`text-base font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-diamond-muted"}`}>
-                      #{idx + 1}
-                    </span>
-                    <div>
-                      <div className="text-sm font-bold text-white">{entry.name}</div>
-                      <div className="text-[9px] text-diamond-muted">
-                        {entry.contact === "discord" ? "Discord" : entry.contact === "telegram" ? "Telegram" : "Rubika"} • {entry.date}
-                      </div>
-                    </div>
+                    <span className={`text-base font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-diamond-muted"}`}>#{idx + 1}</span>
+                    <div><div className="text-sm font-bold text-white">{entry.name}</div><div className="text-[9px] text-diamond-muted">{entry.contact === "discord" ? "Discord" : entry.contact === "telegram" ? "Telegram" : "Rubika"} • {entry.date}</div></div>
                   </div>
                   <div className="text-sm font-bold text-diamond-cyan">{entry.time} ms</div>
                 </div>
