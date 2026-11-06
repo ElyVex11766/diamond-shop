@@ -1,4 +1,3 @@
-// ⚠️ این آیدی کانال رو بعداً پر کن (برای ارسال سفارش به دیسکورد)
 const DISCORD_CHANNEL_ID = "YOUR_CHANNEL_ID_HERE";
 
 export default {
@@ -6,7 +5,6 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
-    // مدیریت CORS
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -18,18 +16,13 @@ export default {
       });
     }
 
-    // 📌 ۱. تست سلامت (Health Check)
     if (url.pathname === "/api/health" && method === "GET") {
       return new Response(JSON.stringify({ ok: true, status: "operational" }), {
         status: 200,
-        headers: { 
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*" 
-        },
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    // 📌 ۲. مسیر ثبت سفارش از سایت
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         const data = await request.json();
@@ -76,11 +69,7 @@ export default {
           throw new Error(`Discord error: ${discordResponse.status}`);
         }
 
-        return new Response(JSON.stringify({ 
-          ok: true, 
-          order_id: orderId,
-          message: "سفارش با موفقیت ثبت شد" 
-        }), {
+        return new Response(JSON.stringify({ ok: true, order_id: orderId, message: "سفارش با موفقیت ثبت شد" }), {
           status: 201,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
@@ -93,7 +82,6 @@ export default {
       }
     }
 
-    // بقیه درخواست‌ها
     return new Response("Not found", { status: 404 });
   },
 };
