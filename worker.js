@@ -7,7 +7,6 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
-    // مدیریت CORS
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -19,7 +18,6 @@ export default {
       });
     }
 
-    // تست سلامت
     if (url.pathname === "/api/health" && method === "GET") {
       return new Response(JSON.stringify({ ok: true, status: "operational" }), {
         status: 200,
@@ -27,7 +25,6 @@ export default {
       });
     }
 
-    // ثبت سفارش
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         const data = await request.json();
@@ -42,7 +39,7 @@ export default {
 
         const orderId = `ORD-${Date.now()}`;
 
-        // ۱. ساخت تیکت (کانال جدید) در کتگوری مشخص‌شده
+        // 👇 ساخت کانال (تیکت)
         const channelResponse = await fetch(
           `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
           {
@@ -53,19 +50,11 @@ export default {
             },
             body: JSON.stringify({
               name: `order-${orderId}`,
-              type: 0, // 0 = Text Channel
+              type: 0,
               parent_id: CATEGORY_ID,
               permission_overwrites: [
-                {
-                  id: GUILD_ID, // @everyone
-                  type: 0,
-                  deny: "1024", // View Channel = deny
-                },
-                {
-                  id: OWNER_ID,
-                  type: 1,
-                  allow: "1024", // View Channel = allow
-                },
+                { id: GUILD_ID, type: 0, deny: "1024" },
+                { id: OWNER_ID, type: 1, allow: "1024" },
               ],
             }),
           }
@@ -79,7 +68,7 @@ export default {
         const channel = await channelResponse.json();
         const channelId = channel.id;
 
-        // ۲. ارسال پیام سفارش داخل تیکت
+        // 👇 ارسال پیام داخل تیکت
         const embedPayload = {
           content: `<@${OWNER_ID}> سفارش جدید از سایت!`,
           embeds: [{
@@ -112,12 +101,7 @@ export default {
           throw new Error(`Discord message failed: ${messageResponse.status}`);
         }
 
-        return new Response(JSON.stringify({ 
-          ok: true, 
-          order_id: orderId, 
-          channel_id: channelId,
-          message: "تیکت با موفقیت ساخته شد" 
-        }), {
+        return new Response(JSON.stringify({ ok: true, order_id: orderId, channel_id: channelId }), {
           status: 201,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
