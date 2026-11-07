@@ -13,7 +13,7 @@ const CARD_NUMBER = "6037-6976-2938-7157";
 const CARD_OWNER = "جعفری"; 
 const COUNTDOWN_SECONDS = 120; // ۲ دقیقه
 
-// ✅ آدرس اصلی سایت (Cloudflare Worker)
+// ✅ آدرس اصلی سایت (Cloudflare Worker) - بدون هیچ اسلش اضافه در آخر
 const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 
 export function CheckoutModal({ isOpen, onClose, product }: Props) {
@@ -70,7 +70,7 @@ export function CheckoutModal({ isOpen, onClose, product }: Props) {
     setIsSubmitting(true);
 
     try {
-      // 👇 حالا مسیر دقیقاً /api/order هست
+      // آدرس نهایی: /api/order
       const response = await fetch(`${WORKER_URL}/api/order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
