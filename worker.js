@@ -24,7 +24,6 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
-    // CORS
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -40,32 +39,45 @@ export default {
       });
     }
 
-    // Discord token check
+    // Safe BOT_KEY diagnostics (never exposes the token)
     if (url.pathname === "/api/discord-check" && method === "GET") {
+      const key = env.BOT_KEY || "";
+
+      return jsonResponse({
+        exists: Boolean(key),
+        length: key.length,
+        startsWithBot: key.startsWith("Bot "),
+        hasWhitespace: /\s/.test(key),
+        hasQuotes: key.includes('"') || key.includes("'"),
+        prefix: key.substring(0, 5),
+      });
+    }
+
+    // Discord authentication test
+    if (url.pathname === "/api/discord-auth" && method === "GET") {
       try {
         if (!env.BOT_KEY) {
           return jsonResponse({
             ok: false,
-            error: "BOT_KEY secret is missing",
+            error: "BOT_KEY is missing",
           }, 500);
         }
 
         const response = await fetch(
           "https://discord.com/api/v10/users/@me",
           {
-            method: "GET",
             headers: {
               "Authorization": `Bot ${env.BOT_KEY}`,
             },
           }
         );
 
-        const result = await response.text();
+        const body = await response.text();
 
         return jsonResponse({
           ok: response.ok,
-          status: response.status,
-          discord_response: result,
+          discord_status: response.status,
+          discord_response: body,
         }, response.ok ? 200 : 502);
 
       } catch (error) {
@@ -80,7 +92,7 @@ export default {
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         if (!env.BOT_KEY) {
-          throw new Error("BOT_KEY secret is missing");
+          throw new Error("BOT_KEY is missing");
         }
 
         const data = await request.json();
@@ -95,7 +107,6 @@ export default {
 
         const orderId = `ORD-${Date.now()}`;
 
-        // Create Discord channel
         const channelResponse = await fetch(
           `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
           {
@@ -133,41 +144,38 @@ export default {
 
         const channel = await channelResponse.json();
 
-        // Send order message
         const embedPayload = {
           content: `<@${OWNER_ID}> سفارش جدید از سایت!`,
-          embeds: [
-            {
-              title: `سفارش ${orderId}`,
-              color: 0x2f81f7,
-              fields: [
-                {
-                  name: "محصول",
-                  value: String(product),
-                  inline: true,
-                },
-                {
-                  name: "تعداد",
-                  value: String(amount),
-                  inline: true,
-                },
-                {
-                  name: "آیدی کاربر",
-                  value: String(contact),
-                  inline: true,
-                },
-                {
-                  name: "شماره تماس",
-                  value: String(phone || "ندارد"),
-                  inline: false,
-                },
-              ],
-              timestamp: new Date().toISOString(),
-              footer: {
-                text: "Diamond Shop",
+          embeds: [{
+            title: `سفارش ${orderId}`,
+            color: 0x2f81f7,
+            fields: [
+              {
+                name: "محصول",
+                value: String(product),
+                inline: true,
               },
+              {
+                name: "تعداد",
+                value: String(amount),
+                inline: true,
+              },
+              {
+                name: "آیدی کاربر",
+                value: String(contact),
+                inline: true,
+              },
+              {
+                name: "شماره تماس",
+                value: String(phone || "ندارد"),
+                inline: false,
+              },
+            ],
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "Diamond Shop",
             },
-          ],
+          }],
         };
 
         const messageResponse = await fetch(
@@ -203,7 +211,6 @@ export default {
       }
     }
 
-    // Other requests
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);
     }
