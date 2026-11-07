@@ -6,7 +6,7 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/orders"] 
+    "run_worker_first": ["https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/order"] 
   },
   "vars": {
     "BOT_KEY": "diamond_shop_for_ever_11766"
