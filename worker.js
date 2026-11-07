@@ -7,6 +7,7 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
+    // مدیریت CORS
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -18,13 +19,7 @@ export default {
       });
     }
 
-    if (url.pathname === "/api/health" && method === "GET") {
-      return new Response(JSON.stringify({ ok: true, status: "operational" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
-    }
-
+    // 📌 مدیریت مستقیم مسیر /api/order (بدون نیاز به run_worker_first)
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         const data = await request.json();
@@ -39,7 +34,6 @@ export default {
 
         const orderId = `ORD-${Date.now()}`;
 
-        // 👇 ساخت کانال (تیکت)
         const channelResponse = await fetch(
           `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
           {
@@ -68,7 +62,6 @@ export default {
         const channel = await channelResponse.json();
         const channelId = channel.id;
 
-        // 👇 ارسال پیام داخل تیکت
         const embedPayload = {
           content: `<@${OWNER_ID}> سفارش جدید از سایت!`,
           embeds: [{
@@ -112,6 +105,19 @@ export default {
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }
+    }
+
+    // 📌 مسیر health
+    if (url.pathname === "/api/health" && method === "GET") {
+      return new Response(JSON.stringify({ ok: true, status: "operational" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    // 📌 بقیه درخواست‌ها (فایل‌های استاتیک)
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
     }
 
     return new Response("Not found", { status: 404 });
