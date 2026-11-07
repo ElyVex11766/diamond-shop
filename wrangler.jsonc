@@ -1,3 +1,4 @@
+
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "diamond-bot",
@@ -7,8 +8,5 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
-  },
-  "vars": {
-    "BOT_KEY": "diamond_shop_for_ever_11766"
   }
 }
