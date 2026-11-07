@@ -39,7 +39,7 @@ export default {
           {
             method: "POST",
             headers: {
-              "Authorization": `Bot ${env.BOT_KEY}`,
+              "Authorization": `Bot ${env.MTU1Nzc5NjE4OTQyMjc1NTk1Mg.G7an7A.ovd65iaipXolaQpD7p-6wUTiC0GR0sfd2_C5qA}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
