@@ -1,5 +1,6 @@
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
+const GUILD_ID = "1551236517442224319";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -82,12 +83,70 @@ export default {
       });
     }
 
-    // Health Check
+    // =========================================================
+    // 1. Health Check
+    // =========================================================
     if (url.pathname === "/api/health" && method === "GET") {
       return jsonResponse({ ok: true, status: "operational", database: Boolean(env.DB) });
     }
 
-    // ثبت سفارش جدید
+    // =========================================================
+    // 2. API آمار سرور (برای صفحه Status)
+    // =========================================================
+    if (url.pathname === "/api/stats" && method === "GET") {
+      try {
+        if (!env.BOT_KEY) {
+          return jsonResponse({ ok: false, error: "BOT_KEY missing" }, 500);
+        }
+
+        // گرفتن اطلاعات سرور (تعداد اعضا و آنلاین)
+        const guildResponse = await fetch(
+          `https://discord.com/api/v10/guilds/${GUILD_ID}?with_counts=true`,
+          {
+            headers: { "Authorization": `Bot ${env.BOT_KEY}` },
+          }
+        );
+
+        if (!guildResponse.ok) {
+          const err = await guildResponse.text();
+          return jsonResponse({ ok: false, error: `Discord error: ${err}` }, 500);
+        }
+
+        const guildData = await guildResponse.json();
+        const totalMembers = guildData.approximate_member_count || 0;
+        const onlineMembers = guildData.approximate_presence_count || 0;
+
+        // بررسی وضعیت ربات
+        const botResponse = await fetch(
+          "https://discord.com/api/v10/users/@me",
+          {
+            headers: { "Authorization": `Bot ${env.BOT_KEY}` },
+          }
+        );
+        const botOnline = botResponse.ok;
+
+        return jsonResponse({
+          ok: true,
+          stats: {
+            totalMembers,
+            onlineMembers,
+            totalServers: 1,
+            botStatus: botOnline ? "online" : "offline",
+            serverName: guildData.name,
+            serverIcon: guildData.icon
+              ? `https://cdn.discordapp.com/icons/${GUILD_ID}/${guildData.icon}.png`
+              : null,
+          },
+        });
+
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500);
+      }
+    }
+
+    // =========================================================
+    // 3. ثبت سفارش جدید
+    // =========================================================
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -121,7 +180,9 @@ export default {
       }
     }
 
-    // دریافت سفارش با توکن (صفحه اختصاصی)
+    // =========================================================
+    // 4. دریافت سفارش با توکن (صفحه اختصاصی)
+    // =========================================================
     const orderGetMatch = url.pathname.match(/^\/api\/order\/([a-f0-9]{64})$/);
     if (orderGetMatch && method === "GET") {
       try {
@@ -142,7 +203,9 @@ export default {
       }
     }
 
-    // ویرایش یک‌باره
+    // =========================================================
+    // 5. ویرایش یک‌باره
+    // =========================================================
     if (orderGetMatch && method === "PATCH") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -180,21 +243,21 @@ export default {
       }
     }
 
-    // 📌 API ربات: دریافت سفارش‌های در انتظار
-    // 🔥 اینجا مهمه: به محض اینکه ربات درخواست داد، سفارش‌ها رو processing می‌کنیم تا دوباره فرستاده نشن
+    // =========================================================
+    // 6. API ربات: دریافت سفارش‌های در انتظار
+    // =========================================================
     if (url.pathname === "/api/bot/orders" && method === "GET") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
       if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
       await ensureOrdersTable(env.DB);
 
-      // ۱. گرفتن سفارش‌های pending
       const result = await env.DB.prepare(
         "SELECT * FROM shop_orders WHERE status = 'pending' ORDER BY created_at ASC LIMIT 100"
       ).all();
 
       const orders = (result.results || []).map(row => JSON.parse(row.payload));
 
-      // ۲. تغییر وضعیت سفارش‌ها به processing تا دفعه بعد دوباره فرستاده نشن
+      // تغییر وضعیت به processing تا دوباره فرستاده نشن
       if (orders.length > 0) {
         const placeholders = orders.map(() => "?").join(",");
         await env.DB.prepare(
@@ -205,7 +268,9 @@ export default {
       return jsonResponse({ ok: true, orders });
     }
 
-    // تایید ساخت تیکت توسط ربات
+    // =========================================================
+    // 7. تایید ساخت تیکت توسط ربات
+    // =========================================================
     const ackMatch = url.pathname.match(/^\/api\/bot\/orders\/([^/]+)\/ack$/);
     if (ackMatch && method === "POST") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
@@ -223,7 +288,9 @@ export default {
       return jsonResponse({ ok: true, acknowledged: true });
     }
 
-    // فایل‌های استاتیک
+    // =========================================================
+    // 8. فایل‌های استاتیک
+    // =========================================================
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return jsonResponse({ ok: false, error: "Not found" }, 404);
   },
