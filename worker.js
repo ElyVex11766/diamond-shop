@@ -1,12 +1,6 @@
-// =========================================================
-// CONSTANTS
-// =========================================================
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 
-// =========================================================
-// HELPERS
-// =========================================================
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -72,9 +66,6 @@ function normalizeOrder(data, id, token, expiresAt) {
   };
 }
 
-// =========================================================
-// MAIN FETCH
-// =========================================================
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -91,16 +82,15 @@ export default {
       });
     }
 
-    // 📌 Health Check
+    // Health Check
     if (url.pathname === "/api/health" && method === "GET") {
       return jsonResponse({ ok: true, status: "operational", database: Boolean(env.DB) });
     }
 
-    // 📌 ثبت سفارش جدید (POST /api/order)
+    // ثبت سفارش جدید
     if (url.pathname === "/api/order" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
-
         const data = await request.json();
         const { product, amount, contact } = data;
 
@@ -109,7 +99,6 @@ export default {
         }
 
         await ensureOrdersTable(env.DB);
-
         const orderId = `ORD-${crypto.randomUUID()}`;
         const token = generateToken();
         const expiresAt = new Date(Date.now() + ORDER_EXPIRY_MINUTES * 60 * 1000).toISOString();
@@ -124,11 +113,7 @@ export default {
         ).run();
 
         return jsonResponse({ 
-          ok: true, 
-          order_id: orderId, 
-          token: token,
-          expires_at: expiresAt,
-          order_url: `/order/${token}`
+          ok: true, order_id: orderId, token, expires_at: expiresAt, order_url: `/order/${token}`
         }, 201);
 
       } catch (error) {
@@ -136,7 +121,7 @@ export default {
       }
     }
 
-    // 📌 دریافت اطلاعات سفارش با توکن (GET /api/order/:token)
+    // دریافت سفارش با توکن (صفحه اختصاصی)
     const orderGetMatch = url.pathname.match(/^\/api\/order\/([a-f0-9]{64})$/);
     if (orderGetMatch && method === "GET") {
       try {
@@ -144,31 +129,20 @@ export default {
         await ensureOrdersTable(env.DB);
 
         const token = orderGetMatch[1];
-        const row = await env.DB.prepare(
-          "SELECT * FROM shop_orders WHERE token = ?"
-        ).bind(token).first();
+        const row = await env.DB.prepare("SELECT * FROM shop_orders WHERE token = ?").bind(token).first();
 
         if (!row) return jsonResponse({ ok: false, error: "Not found" }, 404);
-
-        const order = JSON.parse(row.payload);
-
-        // بررسی انقضا (سمت سرور)
         if (new Date(row.expires_at) < new Date()) {
-          return jsonResponse({ 
-            ok: false, 
-            expired: true, 
-            error: "لینک منقضی شده است." 
-          }, 410);
+          return jsonResponse({ ok: false, expired: true, error: "لینک منقضی شده است." }, 410);
         }
 
-        return jsonResponse({ ok: true, order });
-
+        return jsonResponse({ ok: true, order: JSON.parse(row.payload) });
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500);
       }
     }
 
-    // 📌 ویرایش یک‌باره اطلاعات (PATCH /api/order/:token)
+    // ویرایش یک‌باره
     if (orderGetMatch && method === "PATCH") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -176,9 +150,7 @@ export default {
 
         const token = orderGetMatch[1];
         const data = await request.json();
-        const row = await env.DB.prepare(
-          "SELECT * FROM shop_orders WHERE token = ?"
-        ).bind(token).first();
+        const row = await env.DB.prepare("SELECT * FROM shop_orders WHERE token = ?").bind(token).first();
 
         if (!row) return jsonResponse({ ok: false, error: "Not found" }, 404);
         if (new Date(row.expires_at) < new Date()) {
@@ -186,8 +158,6 @@ export default {
         }
 
         const order = JSON.parse(row.payload);
-
-        // بررسی محدودیت ویرایش یک‌باره
         if (order.edited_at) {
           return jsonResponse({ ok: false, error: "فقط یک بار امکان ویرایش وجود دارد" }, 403);
         }
@@ -195,7 +165,6 @@ export default {
         const oldContact = `${order.platform}: ${order.platform_user_id}`;
         const newContact = data.contact || "";
 
-        // بروزرسانی
         order.platform = newContact.split(":")[0]?.trim() || order.platform;
         order.platform_user_id = newContact.split(":")[1]?.trim() || order.platform_user_id;
         order.edited_at = new Date().toISOString();
@@ -206,27 +175,37 @@ export default {
         `).bind(JSON.stringify(order), order.edited_at, order.edit_history, token).run();
 
         return jsonResponse({ ok: true, message: "ویرایش انجام شد", order });
-
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500);
       }
     }
 
-    // 📌 APIهای ربات (با احراز هویت)
+    // 📌 API ربات: دریافت سفارش‌های در انتظار
+    // 🔥 اینجا مهمه: به محض اینکه ربات درخواست داد، سفارش‌ها رو processing می‌کنیم تا دوباره فرستاده نشن
     if (url.pathname === "/api/bot/orders" && method === "GET") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
       if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
       await ensureOrdersTable(env.DB);
 
+      // ۱. گرفتن سفارش‌های pending
       const result = await env.DB.prepare(
         "SELECT * FROM shop_orders WHERE status = 'pending' ORDER BY created_at ASC LIMIT 100"
       ).all();
 
       const orders = (result.results || []).map(row => JSON.parse(row.payload));
+
+      // ۲. تغییر وضعیت سفارش‌ها به processing تا دفعه بعد دوباره فرستاده نشن
+      if (orders.length > 0) {
+        const placeholders = orders.map(() => "?").join(",");
+        await env.DB.prepare(
+          `UPDATE shop_orders SET status = 'processing' WHERE id IN (${placeholders})`
+        ).bind(...orders.map(o => o.id)).run();
+      }
+
       return jsonResponse({ ok: true, orders });
     }
 
-    // 📌 تایید ساخت تیکت توسط ربات (POST /api/bot/orders/:id/ack)
+    // تایید ساخت تیکت توسط ربات
     const ackMatch = url.pathname.match(/^\/api\/bot\/orders\/([^/]+)\/ack$/);
     if (ackMatch && method === "POST") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
@@ -244,7 +223,7 @@ export default {
       return jsonResponse({ ok: true, acknowledged: true });
     }
 
-    // 📌 بقیه درخواست‌ها (فایل‌های استاتیک)
+    // فایل‌های استاتیک
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return jsonResponse({ ok: false, error: "Not found" }, 404);
   },
