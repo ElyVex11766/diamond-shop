@@ -99,7 +99,6 @@ export default {
           return jsonResponse({ ok: false, error: "BOT_KEY missing" }, 500);
         }
 
-        // گرفتن اطلاعات سرور (تعداد اعضا و آنلاین)
         const guildResponse = await fetch(
           `https://discord.com/api/v10/guilds/${GUILD_ID}?with_counts=true`,
           {
@@ -116,7 +115,6 @@ export default {
         const totalMembers = guildData.approximate_member_count || 0;
         const onlineMembers = guildData.approximate_presence_count || 0;
 
-        // بررسی وضعیت ربات
         const botResponse = await fetch(
           "https://discord.com/api/v10/users/@me",
           {
@@ -124,6 +122,13 @@ export default {
           }
         );
         const botOnline = botResponse.ok;
+        let botAvatar = null;
+        if (botOnline) {
+          const botData = await botResponse.json();
+          botAvatar = botData.avatar
+            ? `https://cdn.discordapp.com/avatars/${botData.id}/${botData.avatar}.png`
+            : `https://cdn.discordapp.com/embed/avatars/0.png`;
+        }
 
         return jsonResponse({
           ok: true,
@@ -132,10 +137,8 @@ export default {
             onlineMembers,
             totalServers: 1,
             botStatus: botOnline ? "online" : "offline",
-            serverName: guildData.name,
-            serverIcon: guildData.icon
-              ? `https://cdn.discordapp.com/icons/${GUILD_ID}/${guildData.icon}.png`
-              : null,
+            serverName: "Diamond BOT",
+            botAvatar: botAvatar,
           },
         });
 
