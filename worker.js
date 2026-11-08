@@ -1,8 +1,8 @@
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
-const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 اینجا آیدی اپلیکیشن دیسکوردت رو بذار
-const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 اینجا Client Secret رو بذار
+const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
+const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
 function jsonResponse(data, status = 200) {
@@ -116,7 +116,7 @@ export default {
     }
 
     // =========================================================
-    // 2. آمار سرور (Status)
+    // 2. API آمار سرور (Status)
     // =========================================================
     if (url.pathname === "/api/stats" && method === "GET") {
       try {
@@ -233,7 +233,7 @@ export default {
     }
 
     // =========================================================
-    // 5. اتصال دیسکورد به اکانت (Link Discord)
+    // 5. اتصال دیسکورد به اکانت
     // =========================================================
     if (url.pathname === "/api/link-discord" && method === "POST") {
       try {
@@ -264,11 +264,13 @@ export default {
     // 6. هدایت به صفحه لاگین دیسکورد (OAuth2)
     // =========================================================
     if (url.pathname === "/api/auth/discord" && method === "GET") {
+      const userId = url.searchParams.get("user_id") || "";
       const params = new URLSearchParams({
         client_id: DISCORD_CLIENT_ID,
         redirect_uri: DISCORD_REDIRECT_URI,
         response_type: "code",
         scope: "identify",
+        state: userId,
       });
       return Response.redirect(
         `https://discord.com/api/oauth2/authorize?${params.toString()}`,
@@ -281,8 +283,10 @@ export default {
     // =========================================================
     if (url.pathname === "/api/auth/callback" && method === "GET") {
       const code = url.searchParams.get("code");
+      const state = url.searchParams.get("state");
+      
       if (!code) {
-        return Response.redirect(`${ALLOWED_ORIGIN}/login?error=no_code`, 302);
+        return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=no_code`, 302);
       }
 
       try {
@@ -299,7 +303,7 @@ export default {
         });
 
         if (!tokenRes.ok) {
-          return Response.redirect(`${ALLOWED_ORIGIN}/login?error=token_failed`, 302);
+          return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=token_failed`, 302);
         }
 
         const tokenData = await tokenRes.json();
@@ -310,7 +314,7 @@ export default {
         });
 
         if (!userRes.ok) {
-          return Response.redirect(`${ALLOWED_ORIGIN}/login?error=user_failed`, 302);
+          return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=user_failed`, 302);
         }
 
         const userData = await userRes.json();
@@ -319,13 +323,14 @@ export default {
           ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png`
           : `https://cdn.discordapp.com/embed/avatars/0.png`;
 
-        // ذخیره در دیتابیس (اگه کاربر با سایت لاگین کرده باشه)
-        await ensureUsersTable(env.DB);
-        await env.DB.prepare(
-          "UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ? WHERE discord_id = ? OR discord_id IS NULL LIMIT 1"
-        ).bind(userData.id, userData.username, avatarUrl, userData.id).run();
+        // ذخیره در دیتابیس (اگر user_id داشتیم)
+        if (state && env.DB) {
+          await ensureUsersTable(env.DB);
+          await env.DB.prepare(
+            "UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ? WHERE id = ?"
+          ).bind(userData.id, userData.username, avatarUrl, state).run();
+        }
 
-        // هدایت به داشبورد با اطلاعات دیسکورد در URL
         const redirectUrl = new URL(`${ALLOWED_ORIGIN}/dashboard`);
         redirectUrl.searchParams.set("discord_id", userData.id);
         redirectUrl.searchParams.set("discord_username", userData.username);
@@ -334,7 +339,7 @@ export default {
         return Response.redirect(redirectUrl.toString(), 302);
 
       } catch (error) {
-        return Response.redirect(`${ALLOWED_ORIGIN}/login?error=server_error`, 302);
+        return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=server_error`, 302);
       }
     }
 
