@@ -6,7 +6,7 @@ import { SectionTitle } from "../components/SectionTitle";
 import { useLang } from "../i18n/LanguageContext";
 
 // ⚠️ این آیدی رو بعد از ساخت اپلیکیشن، اینجا بذار
-const DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"; 
+const DISCORD_CLIENT_ID = "1557796189422755952"; 
 const REDIRECT_URI = "http://localhost:5173/";
 
 export function Login() {
