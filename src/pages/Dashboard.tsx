@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
-import { useLang } from "../i18n/LanguageContext";
 
 export function Dashboard() {
-  const { t } = useLang();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
 
