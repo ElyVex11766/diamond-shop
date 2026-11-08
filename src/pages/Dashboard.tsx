@@ -1,21 +1,44 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("diamond_user");
-    if (!savedUser) {
+    // ۱. اطلاعات دیسکورد از URL رو بگیر (اگر وجود داشته باشه)
+    const discordId = searchParams.get("discord_id");
+    const discordUsername = searchParams.get("discord_username");
+    const discordAvatar = searchParams.get("discord_avatar");
+
+    // ۲. اطلاعات کاربر رو از localStorage بگیر
+    const savedUserStr = localStorage.getItem("diamond_user");
+    if (!savedUserStr) {
       navigate("/login");
       return;
     }
-    setUser(JSON.parse(savedUser));
-  }, [navigate]);
+
+    const savedUser = JSON.parse(savedUserStr);
+
+    // ۳. اگر اطلاعات دیسکورد از URL اومده بود، به کاربر اضافه کن
+    if (discordId && discordUsername) {
+      savedUser.discord_id = discordId;
+      savedUser.discord_username = discordUsername;
+      savedUser.discord_avatar = discordAvatar;
+      
+      // ذخیره در localStorage
+      localStorage.setItem("diamond_user", JSON.stringify(savedUser));
+      
+      // پاک کردن URL
+      navigate("/dashboard", { replace: true });
+    }
+
+    setUser(savedUser);
+  }, [navigate, searchParams]);
 
   const handleLogout = () => {
     localStorage.removeItem("diamond_user");
@@ -42,10 +65,12 @@ export function Dashboard() {
           <h3 className="text-sm font-semibold text-diamond-muted mb-3">اتصال دیسکورد</h3>
           {user.discord_username ? (
             <div className="flex items-center gap-3">
-              {user.discord_avatar && <img src={user.discord_avatar} className="w-10 h-10 rounded-full" />}
+              {user.discord_avatar && (
+                <img src={user.discord_avatar} alt="Discord Avatar" className="w-10 h-10 rounded-full border border-diamond-cyan" />
+              )}
               <div>
                 <p className="text-white font-bold">{user.discord_username}</p>
-                <p className="text-xs text-diamond-muted">{user.discord_id}</p>
+                <p className="text-xs text-diamond-muted">ID: {user.discord_id}</p>
               </div>
             </div>
           ) : (
