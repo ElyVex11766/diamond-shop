@@ -12,7 +12,12 @@ export function OrderPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [newContact, setNewContact] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
+  
+  // تایمر
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isExpired, setIsExpired] = useState(false);
 
+  // دریافت اطلاعات سفارش
   useEffect(() => {
     if (!token) return;
     fetch(`${WORKER_URL}/api/order/${token}`)
@@ -21,13 +26,40 @@ export function OrderPage() {
         if (data.ok) {
           setOrder(data.order);
           setNewContact(`${data.order.platform}: ${data.order.platform_user_id}`);
+          
+          // محاسبه زمان باقی‌مانده
+          const expires = new Date(data.order.expires_at).getTime();
+          const now = Date.now();
+          const diff = Math.max(0, Math.floor((expires - now) / 1000));
+          setTimeLeft(diff);
+          
+          if (diff === 0) setIsExpired(true);
         } else {
           setError(data.error || "خطا در دریافت سفارش");
+          if (data.expired) setIsExpired(true);
         }
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
+
+  // تایمر زنده
+  useEffect(() => {
+    if (timeLeft <= 0 || isExpired) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsExpired(true); // زمان تموم شد
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [timeLeft, isExpired]);
 
   const handleEdit = async () => {
     setEditError(null);
@@ -41,6 +73,7 @@ export function OrderPage() {
       if (data.ok) {
         setOrder(data.order);
         setIsEditing(false);
+        alert("اطلاعات با موفقیت ویرایش شد.");
       } else {
         setEditError(data.error || "خطا در ویرایش");
       }
@@ -54,12 +87,41 @@ export function OrderPage() {
     alert("کپی شد!");
   };
 
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   if (loading) return <div className="text-center py-20 text-white">در حال بارگذاری...</div>;
   if (error) return <div className="text-center py-20 text-red-400">{error}</div>;
+
+  // اگر لینک منقضی شده
+  if (isExpired) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center" dir="rtl">
+        <div className="bg-diamond-panel border border-red-500/30 rounded-2xl p-10 shadow-glow">
+          <div className="text-5xl mb-4">⏰</div>
+          <h1 className="text-2xl font-bold text-red-400 mb-2">لینک منقضی شده است</h1>
+          <p className="text-diamond-muted">زمان ۳۰ دقیقه‌ای این سفارش به پایان رسیده است. لطفاً از پشتیبانی کمک بگیرید.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!order) return null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12" dir="rtl">
+      
+      {/* تایمر ۳۰ دقیقه‌ای */}
+      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6 text-center">
+        <p className="text-sm text-yellow-400 font-bold">
+          ⏳ زمان باقی‌مانده برای اعتبار این لینک:
+          <span className="font-mono text-xl mr-2" dir="ltr">{formatTime(timeLeft)}</span>
+        </p>
+      </div>
+
       <div className="bg-diamond-panel border border-diamond-border rounded-2xl p-6 shadow-glow space-y-6">
         
         {/* شماره سفارش */}
