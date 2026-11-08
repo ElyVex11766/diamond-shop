@@ -1,6 +1,9 @@
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
+const DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"; // 👈 اینجا آیدی اپلیکیشن دیسکوردت رو بذار
+const DISCORD_CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"; // 👈 اینجا Client Secret رو بذار
+const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -113,7 +116,7 @@ export default {
     }
 
     // =========================================================
-    // 2. API آمار سرور (Status)
+    // 2. آمار سرور (Status)
     // =========================================================
     if (url.pathname === "/api/stats" && method === "GET") {
       try {
@@ -230,7 +233,7 @@ export default {
     }
 
     // =========================================================
-    // 5. اتصال دیسکورد به اکانت
+    // 5. اتصال دیسکورد به اکانت (Link Discord)
     // =========================================================
     if (url.pathname === "/api/link-discord" && method === "POST") {
       try {
@@ -258,7 +261,85 @@ export default {
     }
 
     // =========================================================
-    // 6. ثبت سفارش
+    // 6. هدایت به صفحه لاگین دیسکورد (OAuth2)
+    // =========================================================
+    if (url.pathname === "/api/auth/discord" && method === "GET") {
+      const params = new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        redirect_uri: DISCORD_REDIRECT_URI,
+        response_type: "code",
+        scope: "identify",
+      });
+      return Response.redirect(
+        `https://discord.com/api/oauth2/authorize?${params.toString()}`,
+        302
+      );
+    }
+
+    // =========================================================
+    // 7. Callback دیسکورد (دریافت کد و گرفتن توکن)
+    // =========================================================
+    if (url.pathname === "/api/auth/callback" && method === "GET") {
+      const code = url.searchParams.get("code");
+      if (!code) {
+        return Response.redirect(`${ALLOWED_ORIGIN}/login?error=no_code`, 302);
+      }
+
+      try {
+        const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: DISCORD_CLIENT_ID,
+            client_secret: DISCORD_CLIENT_SECRET,
+            grant_type: "authorization_code",
+            code,
+            redirect_uri: DISCORD_REDIRECT_URI,
+          }),
+        });
+
+        if (!tokenRes.ok) {
+          return Response.redirect(`${ALLOWED_ORIGIN}/login?error=token_failed`, 302);
+        }
+
+        const tokenData = await tokenRes.json();
+        const accessToken = tokenData.access_token;
+
+        const userRes = await fetch("https://discord.com/api/v10/users/@me", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (!userRes.ok) {
+          return Response.redirect(`${ALLOWED_ORIGIN}/login?error=user_failed`, 302);
+        }
+
+        const userData = await userRes.json();
+
+        const avatarUrl = userData.avatar
+          ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png`
+          : `https://cdn.discordapp.com/embed/avatars/0.png`;
+
+        // ذخیره در دیتابیس (اگه کاربر با سایت لاگین کرده باشه)
+        await ensureUsersTable(env.DB);
+        await env.DB.prepare(
+          "UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ? WHERE discord_id = ? OR discord_id IS NULL LIMIT 1"
+        ).bind(userData.id, userData.username, avatarUrl, userData.id).run();
+
+        // هدایت به داشبورد با اطلاعات دیسکورد در URL
+        const redirectUrl = new URL(`${ALLOWED_ORIGIN}/dashboard`);
+        redirectUrl.searchParams.set("discord_id", userData.id);
+        redirectUrl.searchParams.set("discord_username", userData.username);
+        redirectUrl.searchParams.set("discord_avatar", avatarUrl);
+
+        return Response.redirect(redirectUrl.toString(), 302);
+
+      } catch (error) {
+        return Response.redirect(`${ALLOWED_ORIGIN}/login?error=server_error`, 302);
+      }
+    }
+
+    // =========================================================
+    // 8. ثبت سفارش
     // =========================================================
     if (url.pathname === "/api/order" && method === "POST") {
       try {
@@ -289,7 +370,7 @@ export default {
     }
 
     // =========================================================
-    // 7. دریافت سفارش با توکن
+    // 9. دریافت سفارش با توکن
     // =========================================================
     const orderGetMatch = url.pathname.match(/^\/api\/order\/([a-f0-9]{64})$/);
     if (orderGetMatch && method === "GET") {
@@ -312,7 +393,7 @@ export default {
     }
 
     // =========================================================
-    // 8. ویرایش یک‌باره
+    // 10. ویرایش یک‌باره
     // =========================================================
     if (orderGetMatch && method === "PATCH") {
       try {
@@ -352,7 +433,7 @@ export default {
     }
 
     // =========================================================
-    // 9. API ربات
+    // 11. API ربات
     // =========================================================
     if (url.pathname === "/api/bot/orders" && method === "GET") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
@@ -376,7 +457,7 @@ export default {
     }
 
     // =========================================================
-    // 10. تایید ساخت تیکت
+    // 12. تایید ساخت تیکت
     // =========================================================
     const ackMatch = url.pathname.match(/^\/api\/bot\/orders\/([^/]+)\/ack$/);
     if (ackMatch && method === "POST") {
@@ -396,7 +477,7 @@ export default {
     }
 
     // =========================================================
-    // 11. فایل‌های استاتیک
+    // 13. فایل‌های استاتیک
     // =========================================================
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return jsonResponse({ ok: false, error: "Not found" }, 404);
