@@ -9,7 +9,8 @@ import { Dashboard } from "./pages/Dashboard";
 import { Status } from "./pages/Status";
 import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
-import { Bot } from "./pages/Bot"; // 👈 صفحه ربات اضافه شد
+import { Bot } from "./pages/Bot";
+import { OrderPage } from "./pages/OrderPage"; // 👈 اضافه شد
 
 export default function App() {
   return (
@@ -24,7 +25,8 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/status" element={<Status />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/bot" element={<Bot />} /> {/* 👈 مسیر ربات اضافه شد */}
+            <Route path="/bot" element={<Bot />} />
+            <Route path="/order/:token" element={<OrderPage />} /> {/* 👈 اضافه شد */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
