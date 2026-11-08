@@ -12,7 +12,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "diamond-shop-db",
+      "database_name": "diamond-bot",
       "database_id": "7ee5dd9f-c4ee-4d91-bdf2-7282ed58808f"
     }
   ]
