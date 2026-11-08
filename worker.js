@@ -14,6 +14,14 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+async function sha256(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function isBotAuthorized(request, env) {
   const expected = String(env.SHOP_API_KEY || "");
   const supplied = String(request.headers.get("Authorization") || "");
@@ -32,6 +40,20 @@ async function ensureOrdersTable(db) {
       expires_at TEXT NOT NULL,
       edited_at TEXT,
       edit_history TEXT
+    )
+  `).run();
+}
+
+async function ensureUsersTable(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      discord_id TEXT,
+      discord_username TEXT,
+      discord_avatar TEXT,
+      created_at TEXT NOT NULL
     )
   `).run();
 }
@@ -91,21 +113,16 @@ export default {
     }
 
     // =========================================================
-    // 2. API آمار سرور (برای صفحه Status)
+    // 2. API آمار سرور (Status)
     // =========================================================
     if (url.pathname === "/api/stats" && method === "GET") {
       try {
-        if (!env.BOT_KEY) {
-          return jsonResponse({ ok: false, error: "BOT_KEY missing" }, 500);
-        }
+        if (!env.BOT_KEY) return jsonResponse({ ok: false, error: "BOT_KEY missing" }, 500);
 
         const guildResponse = await fetch(
           `https://discord.com/api/v10/guilds/${GUILD_ID}?with_counts=true`,
-          {
-            headers: { "Authorization": `Bot ${env.BOT_KEY}` },
-          }
+          { headers: { "Authorization": `Bot ${env.BOT_KEY}` } }
         );
-
         if (!guildResponse.ok) {
           const err = await guildResponse.text();
           return jsonResponse({ ok: false, error: `Discord error: ${err}` }, 500);
@@ -117,9 +134,7 @@ export default {
 
         const botResponse = await fetch(
           "https://discord.com/api/v10/users/@me",
-          {
-            headers: { "Authorization": `Bot ${env.BOT_KEY}` },
-          }
+          { headers: { "Authorization": `Bot ${env.BOT_KEY}` } }
         );
         const botOnline = botResponse.ok;
         let botAvatar = null;
@@ -138,17 +153,112 @@ export default {
             totalServers: 1,
             botStatus: botOnline ? "online" : "offline",
             serverName: "Diamond BOT",
-            botAvatar: botAvatar,
+            botAvatar,
           },
         });
-
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500);
       }
     }
 
     // =========================================================
-    // 3. ثبت سفارش جدید
+    // 3. ثبت‌نام (Register)
+    // =========================================================
+    if (url.pathname === "/api/register" && method === "POST") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { username, password } = await request.json();
+
+        if (!username || !password || username.length < 3 || password.length < 6) {
+          return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است (نام کاربری ۳+ و رمز ۶+ کاراکتر)" }, 400);
+        }
+
+        await ensureUsersTable(env.DB);
+        const passwordHash = await sha256(password);
+        const userId = `user-${crypto.randomUUID()}`;
+
+        try {
+          await env.DB.prepare(
+            "INSERT INTO users (id, username, password_hash, created_at) VALUES (?, ?, ?, ?)"
+          ).bind(userId, username, passwordHash, new Date().toISOString()).run();
+        } catch (e) {
+          return jsonResponse({ ok: false, error: "این نام کاربری قبلاً ثبت شده است" }, 409);
+        }
+
+        return jsonResponse({ ok: true, user_id: userId, username }, 201);
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500);
+      }
+    }
+
+    // =========================================================
+    // 4. ورود (Login)
+    // =========================================================
+    if (url.pathname === "/api/login" && method === "POST") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { username, password } = await request.json();
+
+        if (!username || !password) {
+          return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است" }, 400);
+        }
+
+        await ensureUsersTable(env.DB);
+        const passwordHash = await sha256(password);
+
+        const user = await env.DB.prepare(
+          "SELECT * FROM users WHERE username = ? AND password_hash = ?"
+        ).bind(username, passwordHash).first();
+
+        if (!user) {
+          return jsonResponse({ ok: false, error: "نام کاربری یا رمز عبور اشتباه است" }, 401);
+        }
+
+        return jsonResponse({
+          ok: true,
+          user: {
+            id: user.id,
+            username: user.username,
+            discord_id: user.discord_id,
+            discord_username: user.discord_username,
+            discord_avatar: user.discord_avatar,
+          },
+        });
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500);
+      }
+    }
+
+    // =========================================================
+    // 5. اتصال دیسکورد به اکانت
+    // =========================================================
+    if (url.pathname === "/api/link-discord" && method === "POST") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { user_id, discord_data } = await request.json();
+
+        if (!user_id || !discord_data) {
+          return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
+        }
+
+        await ensureUsersTable(env.DB);
+        await env.DB.prepare(
+          "UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ? WHERE id = ?"
+        ).bind(
+          discord_data.id,
+          discord_data.username,
+          discord_data.avatar || null,
+          user_id
+        ).run();
+
+        return jsonResponse({ ok: true, message: "دیسکورد متصل شد" });
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500);
+      }
+    }
+
+    // =========================================================
+    // 6. ثبت سفارش
     // =========================================================
     if (url.pathname === "/api/order" && method === "POST") {
       try {
@@ -164,27 +274,22 @@ export default {
         const orderId = `ORD-${crypto.randomUUID()}`;
         const token = generateToken();
         const expiresAt = new Date(Date.now() + ORDER_EXPIRY_MINUTES * 60 * 1000).toISOString();
-
         const order = normalizeOrder(data, orderId, token, expiresAt);
 
-        await env.DB.prepare(`
-          INSERT INTO shop_orders (id, token, payload, status, created_at, expires_at)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(
-          orderId, token, JSON.stringify(order), "pending", order.created_at, expiresAt
-        ).run();
+        await env.DB.prepare(
+          "INSERT INTO shop_orders (id, token, payload, status, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)"
+        ).bind(orderId, token, JSON.stringify(order), "pending", order.created_at, expiresAt).run();
 
         return jsonResponse({ 
           ok: true, order_id: orderId, token, expires_at: expiresAt, order_url: `/order/${token}`
         }, 201);
-
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500);
       }
     }
 
     // =========================================================
-    // 4. دریافت سفارش با توکن (صفحه اختصاصی)
+    // 7. دریافت سفارش با توکن
     // =========================================================
     const orderGetMatch = url.pathname.match(/^\/api\/order\/([a-f0-9]{64})$/);
     if (orderGetMatch && method === "GET") {
@@ -207,7 +312,7 @@ export default {
     }
 
     // =========================================================
-    // 5. ویرایش یک‌باره
+    // 8. ویرایش یک‌باره
     // =========================================================
     if (orderGetMatch && method === "PATCH") {
       try {
@@ -236,9 +341,9 @@ export default {
         order.edited_at = new Date().toISOString();
         order.edit_history = JSON.stringify({ old: oldContact, new: newContact });
 
-        await env.DB.prepare(`
-          UPDATE shop_orders SET payload = ?, edited_at = ?, edit_history = ? WHERE token = ?
-        `).bind(JSON.stringify(order), order.edited_at, order.edit_history, token).run();
+        await env.DB.prepare(
+          "UPDATE shop_orders SET payload = ?, edited_at = ?, edit_history = ? WHERE token = ?"
+        ).bind(JSON.stringify(order), order.edited_at, order.edit_history, token).run();
 
         return jsonResponse({ ok: true, message: "ویرایش انجام شد", order });
       } catch (error) {
@@ -247,7 +352,7 @@ export default {
     }
 
     // =========================================================
-    // 6. API ربات: دریافت سفارش‌های در انتظار
+    // 9. API ربات
     // =========================================================
     if (url.pathname === "/api/bot/orders" && method === "GET") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
@@ -260,7 +365,6 @@ export default {
 
       const orders = (result.results || []).map(row => JSON.parse(row.payload));
 
-      // تغییر وضعیت به processing تا دوباره فرستاده نشن
       if (orders.length > 0) {
         const placeholders = orders.map(() => "?").join(",");
         await env.DB.prepare(
@@ -272,7 +376,7 @@ export default {
     }
 
     // =========================================================
-    // 7. تایید ساخت تیکت توسط ربات
+    // 10. تایید ساخت تیکت
     // =========================================================
     const ackMatch = url.pathname.match(/^\/api\/bot\/orders\/([^/]+)\/ack$/);
     if (ackMatch && method === "POST") {
@@ -292,7 +396,7 @@ export default {
     }
 
     // =========================================================
-    // 8. فایل‌های استاتیک
+    // 11. فایل‌های استاتیک
     // =========================================================
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return jsonResponse({ ok: false, error: "Not found" }, 404);
