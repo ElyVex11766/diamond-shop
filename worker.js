@@ -1,8 +1,8 @@
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
-const DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"; // 👈 اینجا آیدی اپلیکیشن دیسکوردت رو بذار
-const DISCORD_CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"; // 👈 اینجا Client Secret رو بذار
+const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 اینجا آیدی اپلیکیشن دیسکوردت رو بذار
+const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 اینجا Client Secret رو بذار
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
 function jsonResponse(data, status = 200) {
