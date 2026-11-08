@@ -20,12 +20,10 @@ export function Dashboard() {
   ];
 
   useEffect(() => {
-    // ۱. اطلاعات دیسکورد از URL
     const discordId = searchParams.get("discord_id");
     const discordUsername = searchParams.get("discord_username");
     const discordAvatar = searchParams.get("discord_avatar");
 
-    // ۲. اطلاعات کاربر از localStorage
     const savedUserStr = localStorage.getItem("diamond_user");
     if (!savedUserStr) {
       navigate("/login");
@@ -34,7 +32,6 @@ export function Dashboard() {
 
     const savedUser = JSON.parse(savedUserStr);
 
-    // ۳. آپدیت اطلاعات دیسکورد
     if (discordId && discordUsername) {
       savedUser.discord_id = discordId;
       savedUser.discord_username = discordUsername;
@@ -61,7 +58,6 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        {/* سایدبار */}
         <aside className="rounded-2xl border border-diamond-border bg-diamond-panel/60 p-3 h-fit">
           <ul className="space-y-1">
             {sidebar.map((s, i) => (
@@ -80,10 +76,8 @@ export function Dashboard() {
           </ul>
         </aside>
 
-        {/* محتوای اصلی */}
         <div className="grid gap-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* پروفایل سایت */}
             <Card>
               <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.profile}</h3>
               <div className="flex items-center gap-4">
@@ -97,7 +91,6 @@ export function Dashboard() {
               </div>
             </Card>
 
-            {/* اتصال دیسکورد */}
             <Card>
               <h3 className="text-sm font-semibold text-diamond-muted mb-3">Discord Connection</h3>
               {user.discord_username ? (
@@ -113,13 +106,14 @@ export function Dashboard() {
               ) : (
                 <div className="text-center">
                   <p className="text-sm text-diamond-muted mb-3">هنوز دیسکورد متصل نیست.</p>
-                  <Button onClick={() => window.location.href = "/api/auth/discord"} className="w-full">اتصال به دیسکورد</Button>
+                  <Button onClick={() => window.location.href = `/api/auth/discord?user_id=${user.id}`} className="w-full">
+                    اتصال به دیسکورد
+                  </Button>
                 </div>
               )}
             </Card>
           </div>
 
-          {/* سرورها */}
           <Card>
             <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.servers}</h3>
             <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-diamond-muted">
@@ -127,7 +121,6 @@ export function Dashboard() {
             </div>
           </Card>
 
-          {/* تنظیمات */}
           <Card>
             <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.settings}</h3>
             <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-diamond-muted">
