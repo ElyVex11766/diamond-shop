@@ -33,15 +33,18 @@ export function Button({
   );
 }
 
+// 👇 LinkButton رو طوری تغییر دادیم که onClick رو هم قبول کنه
 export function LinkButton({
   to,
   variant = "primary",
   children,
   className = "",
-}: BaseProps & { to: string }) {
+  onClick,
+}: BaseProps & { to: string; onClick?: () => void }) {
   return (
     <Link
       to={to}
+      onClick={onClick}
       className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-diamond-cyan/70 ${styles[variant]} ${className}`}
     >
       {children}
