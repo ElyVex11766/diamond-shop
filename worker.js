@@ -5,6 +5,9 @@ const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیش
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
+// 👇 کلید ادمین (این رو عوض کن به یه رمز سخت که فقط خودت بدونی)
+const ADMIN_KEY = "diamond-admin-super-secret-2024";
+
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -17,18 +20,15 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-async function sha256(value) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 function isBotAuthorized(request, env) {
   const expected = String(env.SHOP_API_KEY || "");
   const supplied = String(request.headers.get("Authorization") || "");
   return Boolean(expected) && supplied === `Bearer ${expected}`;
+}
+
+function isAdminAuthorized(request) {
+  const auth = String(request.headers.get("Authorization") || "");
+  return auth === `Bearer ${ADMIN_KEY}`;
 }
 
 async function ensureOrdersTable(db) {
@@ -52,7 +52,7 @@ async function ensureUsersTable(db) {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
+      password TEXT NOT NULL,
       discord_id TEXT,
       discord_username TEXT,
       discord_avatar TEXT,
@@ -165,7 +165,7 @@ export default {
     }
 
     // =========================================================
-    // 3. ثبت‌نام (Register)
+    // 3. ثبت‌نام (Register) - بدون هش
     // =========================================================
     if (url.pathname === "/api/register" && method === "POST") {
       try {
@@ -177,13 +177,12 @@ export default {
         }
 
         await ensureUsersTable(env.DB);
-        const passwordHash = await sha256(password);
         const userId = `user-${crypto.randomUUID()}`;
 
         try {
           await env.DB.prepare(
-            "INSERT INTO users (id, username, password_hash, created_at) VALUES (?, ?, ?, ?)"
-          ).bind(userId, username, passwordHash, new Date().toISOString()).run();
+            "INSERT INTO users (id, username, password, created_at) VALUES (?, ?, ?, ?)"
+          ).bind(userId, username, password, new Date().toISOString()).run();
         } catch (e) {
           return jsonResponse({ ok: false, error: "این نام کاربری قبلاً ثبت شده است" }, 409);
         }
@@ -195,7 +194,7 @@ export default {
     }
 
     // =========================================================
-    // 4. ورود (Login)
+    // 4. ورود (Login) - بدون هش
     // =========================================================
     if (url.pathname === "/api/login" && method === "POST") {
       try {
@@ -207,11 +206,9 @@ export default {
         }
 
         await ensureUsersTable(env.DB);
-        const passwordHash = await sha256(password);
-
         const user = await env.DB.prepare(
-          "SELECT * FROM users WHERE username = ? AND password_hash = ?"
-        ).bind(username, passwordHash).first();
+          "SELECT * FROM users WHERE username = ? AND password = ?"
+        ).bind(username, password).first();
 
         if (!user) {
           return jsonResponse({ ok: false, error: "نام کاربری یا رمز عبور اشتباه است" }, 401);
@@ -279,7 +276,7 @@ export default {
     }
 
     // =========================================================
-    // 7. Callback دیسکورد (دریافت کد و گرفتن توکن)
+    // 7. Callback دیسکورد
     // =========================================================
     if (url.pathname === "/api/auth/callback" && method === "GET") {
       const code = url.searchParams.get("code");
@@ -323,7 +320,6 @@ export default {
           ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png`
           : `https://cdn.discordapp.com/embed/avatars/0.png`;
 
-        // ذخیره در دیتابیس (اگر user_id داشتیم)
         if (state && env.DB) {
           await ensureUsersTable(env.DB);
           await env.DB.prepare(
@@ -482,7 +478,51 @@ export default {
     }
 
     // =========================================================
-    // 13. فایل‌های استاتیک
+    // 13. پنل ادمین: دریافت لیست کاربران
+    // =========================================================
+    if (url.pathname === "/api/admin/users" && method === "GET") {
+      if (!isAdminAuthorized(request)) {
+        return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+      }
+
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        await ensureUsersTable(env.DB);
+
+        const result = await env.DB.prepare("SELECT * FROM users ORDER BY created_at DESC").all();
+        return jsonResponse({ ok: true, users: result.results || [] });
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500);
+      }
+    }
+
+    // =========================================================
+    // 14. پنل ادمین: تغییر رمز کاربر
+    // =========================================================
+    if (url.pathname === "/api/admin/reset-password" && method === "POST") {
+      if (!isAdminAuthorized(request)) {
+        return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+      }
+
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { user_id, new_password } = await request.json();
+
+        if (!user_id || !new_password) {
+          return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
+        }
+
+        await ensureUsersTable(env.DB);
+        await env.DB.prepare("UPDATE users SET password = ? WHERE id = ?").bind(new_password, user_id).run();
+
+        return jsonResponse({ ok: true, message: "رمز عبور با موفقیت تغییر کرد" });
+      } catch (error) {
+        return jsonResponse({ ok: false, error: error.message }, 500);
+      }
+    }
+
+    // =========================================================
+    // 15. فایل‌های استاتیک
     // =========================================================
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return jsonResponse({ ok: false, error: "Not found" }, 404);
