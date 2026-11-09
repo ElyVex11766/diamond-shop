@@ -6,7 +6,7 @@ const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلی
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
 // 👇 کلید ادمین (این رو عوض کن به یه رمز سخت که فقط خودت بدونی)
-const ADMIN_KEY = "diamond-admin-super-secret-2024";
+const ADMIN_KEY = "elyas_gang_11766";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
