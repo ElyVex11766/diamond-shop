@@ -1,9 +1,9 @@
-const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
+const ALLOWED_ORIGIN = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
 const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
-const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
+const DISCORD_REDIRECT_URI = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 const ADMIN_KEY = "elyas_gang_11766"; // 👈 کلید ادمین رو عوض کن
 
 function jsonResponse(data, status = 200) {
