@@ -18,11 +18,11 @@ export function ReactionTest() {
   const [result, setResult] = useState(0);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [remainingPlays, setRemainingPlays] = useState<number | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number>(0);
 
-  // لود کردن لیدربورد از API
   const fetchLeaderboard = async () => {
     try {
       const res = await fetch(`${WORKER_URL}/api/leaderboard`);
@@ -37,11 +37,38 @@ export function ReactionTest() {
     fetchLeaderboard();
   }, []);
 
-  const startTest = () => {
+  const startTest = async () => {
     if (!name.trim()) {
       setErrorMsg("لطفاً نام یا آیدی خود را وارد کنید.");
       return;
     }
+
+    // 👇 چک کردن محدودیت ۵ بار در روز
+    try {
+      const res = await fetch(`${WORKER_URL}/api/check-limit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), contact: contactType }),
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        setErrorMsg(data.error || "خطا در چک کردن محدودیت");
+        return;
+      }
+
+      if (data.remaining <= 0) {
+        setErrorMsg("⛔ شما امروز ۵ بار تست داده‌اید. فردا دوباره تلاش کنید!");
+        return;
+      }
+
+      setRemainingPlays(data.remaining);
+    } catch (err) {
+      console.error("Error checking limit:", err);
+      setErrorMsg("خطا در ارتباط با سرور");
+      return;
+    }
+
     setErrorMsg("");
     setStep("waiting");
     
@@ -76,6 +103,11 @@ export function ReactionTest() {
           }),
         });
         await fetchLeaderboard();
+        
+        // آپدیت تعداد بازی‌های باقی‌مانده
+        if (remainingPlays !== null && remainingPlays > 0) {
+          setRemainingPlays(remainingPlays - 1);
+        }
       } catch (err) {
         console.error("Error saving score:", err);
       }
@@ -102,6 +134,11 @@ export function ReactionTest() {
               </select>
               <input type="text" placeholder="آیدی خود را وارد کنید" value={name} onChange={(e) => setName(e.target.value)} className="w-2/3 bg-diamond-bg border border-diamond-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-diamond-cyan text-center font-bold relative z-30" />
             </div>
+            {remainingPlays !== null && (
+              <p className="text-xs text-diamond-cyan font-bold">
+                بازی‌های باقی‌مانده امروز: {remainingPlays} از ۵
+              </p>
+            )}
             {errorMsg && <p className="text-red-400 text-sm relative z-30">{errorMsg}</p>}
             <Button onClick={startTest} className="w-full py-3 relative z-30">شروع تست</Button>
           </div>
@@ -140,70 +177,4 @@ export function ReactionTest() {
               <div className="text-xs text-white font-bold">کیپ Optifine</div>
             </div>
             <div className="bg-amber-700/10 border border-amber-700/30 rounded-lg p-3 text-center">
-              <div className="text-xl mb-1">🥉</div>
-              <div className="text-[10px] text-amber-500 font-bold mb-1">نفر سوم</div>
-              <div className="text-xs text-white font-bold">۵ گیگ V2Ray</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-white/10">
-          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-            <span>📊</span> ۱۰ نفر برتر (هفتگی)
-          </h3>
-          {leaderboard.length === 0 ? (
-            <p className="text-sm text-diamond-muted text-center py-2">هنوز کسی رکوردی ثبت نکرده است.</p>
-          ) : (
-            <div className="space-y-2">
-              {leaderboard.map((entry, idx) => (
-                <div key={entry.id} className="flex items-center justify-between bg-diamond-bg/50 p-2.5 rounded-lg border border-white/5">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-base font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-diamond-muted"}`}>
-                      #{idx + 1}
-                    </span>
-                    <div>
-                      <div className="text-sm font-bold text-white">{entry.name}</div>
-                      <div className="text-[9px] text-diamond-muted">
-                        {entry.contact} • {new Date(entry.created_at).toLocaleDateString('fa-IR')}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm font-bold text-diamond-cyan">{entry.time} ms</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 🏆 لیدربورد همیشگی (بدون جایزه) */}
-      <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 relative z-20 mt-6">
-        <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-          <span>🏅</span> ۱۰ نفر برتر (همیشگی)
-        </h3>
-        <p className="text-xs text-diamond-muted mb-4">این لیدربورد هیچ جایزه‌ای ندارد و فقط برای ثبت رکوردهای برتر است.</p>
-        {leaderboard.length === 0 ? (
-          <p className="text-sm text-diamond-muted text-center py-2">هنوز کسی رکوردی ثبت نکرده است.</p>
-        ) : (
-          <div className="space-y-2">
-            {leaderboard.map((entry, idx) => (
-              <div key={entry.id} className="flex items-center justify-between bg-diamond-bg/50 p-2.5 rounded-lg border border-white/5">
-                <div className="flex items-center gap-2">
-                  <span className={`text-base font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-diamond-muted"}`}>
-                    #{idx + 1}
-                  </span>
-                  <div>
-                    <div className="text-sm font-bold text-white">{entry.name}</div>
-                    <div className="text-[9px] text-diamond-muted">{entry.contact}</div>
-                  </div>
-                </div>
-                <div className="text-sm font-bold text-diamond-cyan">{entry.time} ms</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-    </div>
-  );
-}
+              <div className="text-xl mb-1">🥉
