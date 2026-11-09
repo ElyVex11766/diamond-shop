@@ -1,10 +1,10 @@
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
-const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت رو بذار
-const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن رو بذار
+const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
+const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
-const ADMIN_KEY = "elyas_gang_11766"; // 👈 کلید ادمین رو عوض کن
+const ADMIN_KEY = "diamond-admin-super-secret-2024"; // 👈 کلید ادمین رو عوض کن
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -61,12 +61,23 @@ async function ensureUsersTable(db) {
     )
   `).run();
 
-  // سازگاری با جدول users قدیمی
   const columns = await db.prepare("PRAGMA table_info(users)").all();
   const hasIpCountry = (columns.results || []).some((column) => column.name === "last_ip_country");
   if (!hasIpCountry) {
     await db.prepare("ALTER TABLE users ADD COLUMN last_ip_country TEXT").run();
   }
+}
+
+async function ensureLeaderboardTable(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS leaderboard (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      time INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `).run();
 }
 
 function generateToken() {
@@ -139,7 +150,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 3. Register + IP
+    // 3. Register
     if (url.pathname === "/api/register" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -162,7 +173,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 4. Login + IP
+    // 4. Login
     if (url.pathname === "/api/login" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -323,6 +334,30 @@ export default {
         else if (new_username) await env.DB.prepare("UPDATE users SET username = ? WHERE id = ?").bind(new_username, user_id).run();
         else if (new_password) await env.DB.prepare("UPDATE users SET password = ? WHERE id = ?").bind(new_password, user_id).run();
         return jsonResponse({ ok: true, message: "تغییرات ذخیره شد" });
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    // 15. Leaderboard: ثبت رکورد
+    if (url.pathname === "/api/leaderboard" && method === "POST") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { name, contact, time } = await request.json();
+        if (!name || !time || time <= 0) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
+        await ensureLeaderboardTable(env.DB);
+        const entryId = crypto.randomUUID();
+        await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(entryId, name, contact, time, new Date().toISOString()).run();
+        await env.DB.prepare(`DELETE FROM leaderboard WHERE id NOT IN (SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10)`).run();
+        return jsonResponse({ ok: true, message: "رکورد ثبت شد" }, 201);
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    // 16. Leaderboard: دریافت ۱۰ نفر برتر
+    if (url.pathname === "/api/leaderboard" && method === "GET") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        await ensureLeaderboardTable(env.DB);
+        const result = await env.DB.prepare("SELECT * FROM leaderboard ORDER BY time ASC LIMIT 10").all();
+        return jsonResponse({ ok: true, entries: result.results || [] });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
