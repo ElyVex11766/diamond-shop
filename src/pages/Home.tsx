@@ -9,9 +9,10 @@ export function Home() {
   return (
     <>
       {/* Hero - بخش فروشگاه */}
-      <section className="relative overflow-hidden min-h-[70vh] flex items-center">
+      {/* 👇 min-h-screen شد تا کل صفحه رو پر کنه و py-32 برای فضای بیشتر */}
+      <section className="relative overflow-hidden min-h-screen flex items-center">
         <div className="absolute inset-0 bg-radial-glow pointer-events-none" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-20 grid gap-12 md:grid-cols-2 items-center w-full">
+        <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-20 md:py-32 grid gap-12 md:grid-cols-2 items-center w-full">
           
           <div className="space-y-6 z-10">
             <span className="inline-block rounded-full border border-diamond-cyan/30 bg-diamond-cyan/10 px-3 py-1 text-xs font-semibold text-diamond-cyan">
@@ -39,7 +40,8 @@ export function Home() {
       </section>
 
       {/* بخش مینی گیم (تست سرعت واکنش) */}
-      <section className="mx-auto max-w-4xl px-4 py-8">
+      {/* 👇 py-24 برای ایجاد فاصله‌ی خالی زیاد بالای مینی‌گیم */}
+      <section className="mx-auto max-w-4xl px-4 py-24">
         <div className="rounded-3xl border border-diamond-cyan/30 bg-gradient-to-b from-diamond-panel to-diamond-bg p-6 md:p-10 text-center shadow-glow-sm relative overflow-hidden">
           
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-diamond-cyan/20 blur-3xl rounded-full pointer-events-none"></div>
