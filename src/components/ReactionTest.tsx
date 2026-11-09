@@ -18,7 +18,6 @@ export function ReactionTest() {
   const [result, setResult] = useState(0);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -65,7 +64,6 @@ export function ReactionTest() {
       const reactionTime = Date.now() - startTimeRef.current;
       setResult(reactionTime);
       setStep("result");
-      setIsSubmitting(true);
 
       try {
         await fetch(`${WORKER_URL}/api/leaderboard`, {
@@ -80,8 +78,6 @@ export function ReactionTest() {
         await fetchLeaderboard();
       } catch (err) {
         console.error("Error saving score:", err);
-      } finally {
-        setIsSubmitting(false);
       }
     }
   };
