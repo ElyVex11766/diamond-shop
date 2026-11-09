@@ -12,7 +12,7 @@ const CARD_NUMBER = "6037-6976-2938-7157";
 const CARD_OWNER = "جعفری"; 
 const WAIT_SECONDS = 120; // ۲ دقیقه برای فعال شدن دکمه
 
-const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
+const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 
 export function CheckoutModal({ isOpen, onClose, product }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
