@@ -92,7 +92,7 @@ export function Dashboard() {
             </Card>
 
             <Card>
-              <h3 className="text-sm font-semibold text-diamond-muted mb-3">Discord Connection</h3>
+              <h3 className="text-sm font-semibold text-diamond-muted mb-3">اتصال دیسکورد</h3>
               {user.discord_username ? (
                 <div className="flex items-center gap-3">
                   {user.discord_avatar && (
@@ -114,17 +114,23 @@ export function Dashboard() {
             </Card>
           </div>
 
+          {/* سرورها */}
           <Card>
             <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.servers}</h3>
             <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-diamond-muted">
-              {t.dashboard.noServers}
+              {user.discord_username 
+                ? "در حال دریافت اطلاعات سرورها از دیسکورد..." 
+                : "برای مشاهده سرورها، ابتدا دیسکورد خود را متصل کنید."}
             </div>
           </Card>
 
+          {/* تنظیمات */}
           <Card>
             <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.settings}</h3>
             <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-diamond-muted">
-              {t.dashboard.settingsPlaceholder}
+              {user.discord_username 
+                ? "تنظیمات سرور پس از انتخاب سرور نمایش داده می‌شود." 
+                : "برای تنظیمات، ابتدا دیسکورد خود را متصل کنید."}
             </div>
           </Card>
         </div>
