@@ -15,6 +15,7 @@ interface User {
   discord_avatar: string | null;
   created_at: string;
   last_ip: string | null;
+  last_ip_country: string | null;
   last_login: string | null;
 }
 
@@ -97,9 +98,13 @@ export function AdminUser() {
               <div className="bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white font-mono text-sm">{user.last_ip || "نامشخص"}</div>
             </div>
             <div>
-              <label className="block text-sm text-diamond-muted mb-1">تاریخ عضویت</label>
-              <div className="bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white text-sm">{new Date(user.created_at).toLocaleString('fa-IR')}</div>
+              <label className="block text-sm text-diamond-muted mb-1">کشور (IP)</label>
+              <div className="bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white font-mono text-sm">{user.last_ip_country || "نامشخص"}</div>
             </div>
+          </div>
+          <div>
+            <label className="block text-sm text-diamond-muted mb-1">تاریخ عضویت</label>
+            <div className="bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white text-sm">{new Date(user.created_at).toLocaleString('fa-IR')}</div>
           </div>
           <Button onClick={handleSave} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500">ذخیره تغییرات</Button>
         </div>
