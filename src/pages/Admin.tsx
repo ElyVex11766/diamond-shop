@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 
@@ -13,16 +14,14 @@ interface User {
   discord_username: string | null;
   created_at: string;
   last_ip: string | null;
-  last_login: string | null;
 }
 
 export function Admin() {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [enteredKey, setEnteredKey] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [newPassword, setNewPassword] = useState("");
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -42,31 +41,6 @@ export function Admin() {
   useEffect(() => {
     if (isLoggedIn) fetchUsers();
   }, [isLoggedIn]);
-
-  const handleResetPassword = async () => {
-    if (!selectedUser || !newPassword) return;
-    try {
-      const res = await fetch(`${WORKER_URL}/api/admin/reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ADMIN_KEY}`,
-        },
-        body: JSON.stringify({ user_id: selectedUser.id, new_password: newPassword }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        alert("رمز با موفقیت تغییر کرد!");
-        setSelectedUser(null);
-        setNewPassword("");
-        fetchUsers();
-      } else {
-        alert(data.error);
-      }
-    } catch (err) {
-      alert("خطا در تغییر رمز");
-    }
-  };
 
   if (!isLoggedIn) {
     return (
@@ -130,41 +104,16 @@ export function Admin() {
                   </td>
                   <td className="px-4 py-3">
                     <Button
-                      onClick={() => setSelectedUser(user)}
-                      className="text-xs px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                      onClick={() => navigate(`/admin/user/${user.id}`)}
+                      className="text-xs px-3 py-1 bg-diamond-blue/20 text-diamond-cyan hover:bg-diamond-blue/30"
                     >
-                      تغییر رمز
+                      مشاهده / ویرایش
                     </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-white mb-4">
-              تغییر رمز برای: {selectedUser.username}
-            </h3>
-            <input
-              type="text"
-              placeholder="رمز جدید را وارد کنید"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white mb-4 focus:outline-none focus:border-diamond-cyan"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleResetPassword} className="flex-1 bg-emerald-600 hover:bg-emerald-500">
-                ذخیره
-              </Button>
-              <Button onClick={() => setSelectedUser(null)} variant="secondary" className="flex-1">
-                انصراف
-              </Button>
-            </div>
-          </Card>
         </div>
       )}
     </div>
