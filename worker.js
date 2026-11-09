@@ -4,9 +4,7 @@ const GUILD_ID = "1551236517442224319";
 const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
-
-// 👇 کلید ادمین (این رو عوض کن به یه رمز سخت که فقط خودت بدونی)
-const ADMIN_KEY = "elyas_gang_11766";
+const ADMIN_KEY = "elyas_gang_11766"; // 👈 کلید ادمین رو عوض کن
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -56,7 +54,9 @@ async function ensureUsersTable(db) {
       discord_id TEXT,
       discord_username TEXT,
       discord_avatar TEXT,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      last_ip TEXT,
+      last_login TEXT
     )
   `).run();
 }
@@ -165,12 +165,13 @@ export default {
     }
 
     // =========================================================
-    // 3. ثبت‌نام (Register) - بدون هش
+    // 3. ثبت‌نام (Register) + IP
     // =========================================================
     if (url.pathname === "/api/register" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { username, password } = await request.json();
+        const userIp = request.headers.get("CF-Connecting-IP") || "Unknown";
 
         if (!username || !password || username.length < 3 || password.length < 6) {
           return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است (نام کاربری ۳+ و رمز ۶+ کاراکتر)" }, 400);
@@ -181,8 +182,8 @@ export default {
 
         try {
           await env.DB.prepare(
-            "INSERT INTO users (id, username, password, created_at) VALUES (?, ?, ?, ?)"
-          ).bind(userId, username, password, new Date().toISOString()).run();
+            "INSERT INTO users (id, username, password, created_at, last_ip) VALUES (?, ?, ?, ?, ?)"
+          ).bind(userId, username, password, new Date().toISOString(), userIp).run();
         } catch (e) {
           return jsonResponse({ ok: false, error: "این نام کاربری قبلاً ثبت شده است" }, 409);
         }
@@ -194,12 +195,13 @@ export default {
     }
 
     // =========================================================
-    // 4. ورود (Login) - بدون هش
+    // 4. ورود (Login) + IP
     // =========================================================
     if (url.pathname === "/api/login" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { username, password } = await request.json();
+        const userIp = request.headers.get("CF-Connecting-IP") || "Unknown";
 
         if (!username || !password) {
           return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است" }, 400);
@@ -213,6 +215,10 @@ export default {
         if (!user) {
           return jsonResponse({ ok: false, error: "نام کاربری یا رمز عبور اشتباه است" }, 401);
         }
+
+        await env.DB.prepare(
+          "UPDATE users SET last_ip = ?, last_login = ? WHERE id = ?"
+        ).bind(userIp, new Date().toISOString(), user.id).run();
 
         return jsonResponse({
           ok: true,
@@ -230,7 +236,7 @@ export default {
     }
 
     // =========================================================
-    // 5. اتصال دیسکورد به اکانت
+    // 5. اتصال دیسکورد
     // =========================================================
     if (url.pathname === "/api/link-discord" && method === "POST") {
       try {
@@ -258,7 +264,7 @@ export default {
     }
 
     // =========================================================
-    // 6. هدایت به صفحه لاگین دیسکورد (OAuth2)
+    // 6. هدایت به دیسکورد (OAuth2)
     // =========================================================
     if (url.pathname === "/api/auth/discord" && method === "GET") {
       const userId = url.searchParams.get("user_id") || "";
@@ -497,7 +503,7 @@ export default {
     }
 
     // =========================================================
-    // 14. پنل ادمین: تغییر رمز کاربر
+    // 14. پنل ادمین: تغییر رمز
     // =========================================================
     if (url.pathname === "/api/admin/reset-password" && method === "POST") {
       if (!isAdminAuthorized(request)) {
