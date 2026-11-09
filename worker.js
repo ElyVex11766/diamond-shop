@@ -1,10 +1,10 @@
 const ALLOWED_ORIGIN = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
-const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
-const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
+const DISCORD_CLIENT_ID = "YOUR_CLIENT_ID_HERE"; // 👈 آیدی اپلیکیشن دیسکوردت
+const DISCORD_CLIENT_SECRET = "YOUR_CLIENT_SECRET_HERE"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
-const ADMIN_KEY = "elyas_gang_11766"; // 👈 کلید ادمین رو عوض کن
+const ADMIN_KEY = "diamond-admin-super-secret-2024"; // 👈 کلید ادمین رو عوض کن
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -92,6 +92,20 @@ function normalizeOrder(data, id, token, expiresAt) {
   };
 }
 
+// 👇 تابع چک کردن IP ایران با API
+async function isIranianIP(ip) {
+  if (!ip || ip === "Unknown") return false;
+  
+  try {
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,countryCode`);
+    const data = await response.json();
+    return data.status === "success" && data.countryCode === "IR";
+  } catch (error) {
+    console.error("IP lookup error:", error);
+    return false;
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -171,7 +185,9 @@ export default {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { username, password } = await request.json();
-        const userIp = request.headers.get("CF-Connecting-IP") || "Unknown";
+        
+        const rawIp = request.headers.get("CF-Connecting-IP") || "Unknown";
+        const userIp = (await isIranianIP(rawIp)) ? rawIp : "خارج از ایران";
 
         if (!username || !password || username.length < 3 || password.length < 6) {
           return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است (نام کاربری ۳+ و رمز ۶+ کاراکتر)" }, 400);
@@ -201,7 +217,9 @@ export default {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { username, password } = await request.json();
-        const userIp = request.headers.get("CF-Connecting-IP") || "Unknown";
+        
+        const rawIp = request.headers.get("CF-Connecting-IP") || "Unknown";
+        const userIp = (await isIranianIP(rawIp)) ? rawIp : "خارج از ایران";
 
         if (!username || !password) {
           return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است" }, 400);
@@ -236,7 +254,7 @@ export default {
     }
 
     // =========================================================
-    // 5. اتصال دیسکورد
+    // 5. اتصال دیسکورد به اکانت
     // =========================================================
     if (url.pathname === "/api/link-discord" && method === "POST") {
       try {
@@ -264,7 +282,7 @@ export default {
     }
 
     // =========================================================
-    // 6. هدایت به دیسکورد (OAuth2)
+    // 6. هدایت به صفحه لاگین دیسکورد (OAuth2)
     // =========================================================
     if (url.pathname === "/api/auth/discord" && method === "GET") {
       const userId = url.searchParams.get("user_id") || "";
@@ -503,7 +521,7 @@ export default {
     }
 
     // =========================================================
-    // 14. پنل ادمین: تغییر رمز
+    // 14. پنل ادمین: تغییر رمز کاربر
     // =========================================================
     if (url.pathname === "/api/admin/reset-password" && method === "POST") {
       if (!isAdminAuthorized(request)) {
