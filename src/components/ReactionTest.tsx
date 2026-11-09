@@ -177,4 +177,70 @@ export function ReactionTest() {
               <div className="text-xs text-white font-bold">کیپ Optifine</div>
             </div>
             <div className="bg-amber-700/10 border border-amber-700/30 rounded-lg p-3 text-center">
-              <div className="text-xl mb-1">🥉
+              <div className="text-xl mb-1">🥉</div>
+              <div className="text-[10px] text-amber-500 font-bold mb-1">نفر سوم</div>
+              <div className="text-xs text-white font-bold">۵ گیگ V2Ray</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-white/10">
+          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+            <span>📊</span> ۱۰ نفر برتر (هفتگی)
+          </h3>
+          {leaderboard.length === 0 ? (
+            <p className="text-sm text-diamond-muted text-center py-2">هنوز کسی رکوردی ثبت نکرده است.</p>
+          ) : (
+            <div className="space-y-2">
+              {leaderboard.map((entry, idx) => (
+                <div key={entry.id} className="flex items-center justify-between bg-diamond-bg/50 p-2.5 rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-base font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-diamond-muted"}`}>
+                      #{idx + 1}
+                    </span>
+                    <div>
+                      <div className="text-sm font-bold text-white">{entry.name}</div>
+                      <div className="text-[9px] text-diamond-muted">
+                        {entry.contact} • {new Date(entry.created_at).toLocaleDateString('fa-IR')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-diamond-cyan">{entry.time} ms</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 🏆 لیدربورد همیشگی (بدون جایزه) */}
+      <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 relative z-20 mt-6">
+        <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+          <span>🏅</span> ۱۰ نفر برتر (همیشگی)
+        </h3>
+        <p className="text-xs text-diamond-muted mb-4">این لیدربورد هیچ جایزه‌ای ندارد و فقط برای ثبت رکوردهای برتر است.</p>
+        {leaderboard.length === 0 ? (
+          <p className="text-sm text-diamond-muted text-center py-2">هنوز کسی رکوردی ثبت نکرده است.</p>
+        ) : (
+          <div className="space-y-2">
+            {leaderboard.map((entry, idx) => (
+              <div key={entry.id} className="flex items-center justify-between bg-diamond-bg/50 p-2.5 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <span className={`text-base font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-diamond-muted"}`}>
+                    #{idx + 1}
+                  </span>
+                  <div>
+                    <div className="text-sm font-bold text-white">{entry.name}</div>
+                    <div className="text-[9px] text-diamond-muted">{entry.contact}</div>
+                  </div>
+                </div>
+                <div className="text-sm font-bold text-diamond-cyan">{entry.time} ms</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
