@@ -3,7 +3,7 @@ import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { useLang } from "../i18n/LanguageContext";
 
-const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
+const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 
 interface Stats {
   totalMembers: number;
