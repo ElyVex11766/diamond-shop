@@ -11,7 +11,7 @@ import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 import { Bot } from "./pages/Bot";
 import { OrderPage } from "./pages/OrderPage";
-import { Admin } from "./pages/Admin"; // 👈 اضافه شد
+import { Admin } from "./pages/Admin";
 
 export default function App() {
   return (
@@ -28,7 +28,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/bot" element={<Bot />} />
             <Route path="/order/:token" element={<OrderPage />} />
-            <Route path="/admin" element={<Admin />} /> {/* 👈 اضافه شد */}
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
