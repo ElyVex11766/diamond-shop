@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 
-const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
+const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ADMIN_KEY = "elyas_gang_11766"; // 👈 همون کلیدی که توی worker.js گذاشتی
 
 interface User {
