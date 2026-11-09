@@ -4,7 +4,7 @@ const GUILD_ID = "1551236517442224319";
 const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
-const ADMIN_KEY = "diamond-admin-super-secret-2024"; // 👈 کلید ادمین رو عوض کن
+const ADMIN_KEY = "elyas_gang_11766"; // 👈 کلید ادمین رو عوض کن
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -337,16 +337,42 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 15. Leaderboard: ثبت رکورد
+    // 15. Leaderboard: ثبت رکورد (با جلوگیری از تکرار)
     if (url.pathname === "/api/leaderboard" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { name, contact, time } = await request.json();
         if (!name || !time || time <= 0) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
+        
         await ensureLeaderboardTable(env.DB);
-        const entryId = crypto.randomUUID();
-        await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(entryId, name, contact, time, new Date().toISOString()).run();
-        await env.DB.prepare(`DELETE FROM leaderboard WHERE id NOT IN (SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10)`).run();
+
+        // چک کردن اینکه آیا قبلاً رکوردی با همین اسم و پلتفرم وجود داره یا نه
+        const existing = await env.DB.prepare(
+          "SELECT * FROM leaderboard WHERE name = ? AND contact = ?"
+        ).bind(name, contact).first();
+
+        if (existing) {
+          // اگه رکورد قبلی وجود داشت، فقط اگه رکورد جدید بهتر بود آپدیت کن
+          if (time < existing.time) {
+            await env.DB.prepare(
+              "UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?"
+            ).bind(time, new Date().toISOString(), existing.id).run();
+          }
+        } else {
+          // اگه کاربر جدید بود، رکورد جدید اضافه کن
+          const entryId = crypto.randomUUID();
+          await env.DB.prepare(
+            "INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)"
+          ).bind(entryId, name, contact, time, new Date().toISOString()).run();
+        }
+
+        // حذف رکوردهای اضافی (فقط ۱۰ نفر برتر)
+        await env.DB.prepare(`
+          DELETE FROM leaderboard WHERE id NOT IN (
+            SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10
+          )
+        `).run();
+
         return jsonResponse({ ok: true, message: "رکورد ثبت شد" }, 201);
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
