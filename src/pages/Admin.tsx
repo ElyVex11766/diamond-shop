@@ -12,6 +12,8 @@ interface User {
   discord_id: string | null;
   discord_username: string | null;
   created_at: string;
+  last_ip: string | null;
+  last_login: string | null;
 }
 
 export function Admin() {
@@ -109,6 +111,7 @@ export function Admin() {
                 <th className="px-4 py-3">نام کاربری</th>
                 <th className="px-4 py-3">رمز عبور</th>
                 <th className="px-4 py-3">دیسکورد</th>
+                <th className="px-4 py-3">آخرین IP</th>
                 <th className="px-4 py-3">تاریخ عضویت</th>
                 <th className="px-4 py-3">عملیات</th>
               </tr>
@@ -121,6 +124,7 @@ export function Admin() {
                   <td className="px-4 py-3 text-diamond-cyan">
                     {user.discord_username ? `${user.discord_username} (${user.discord_id})` : "متصل نیست"}
                   </td>
+                  <td className="px-4 py-3 text-diamond-muted font-mono text-xs">{user.last_ip || "نامشخص"}</td>
                   <td className="px-4 py-3 text-diamond-muted">
                     {new Date(user.created_at).toLocaleDateString('fa-IR')}
                   </td>
