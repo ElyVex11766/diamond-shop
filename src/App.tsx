@@ -12,6 +12,7 @@ import { NotFound } from "./pages/NotFound";
 import { Bot } from "./pages/Bot";
 import { OrderPage } from "./pages/OrderPage";
 import { Admin } from "./pages/Admin";
+import { AdminUser } from "./pages/AdminUser"; // 👈 اضافه شد
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/bot" element={<Bot />} />
             <Route path="/order/:token" element={<OrderPage />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/user/:id" element={<AdminUser />} /> {/* 👈 اضافه شد */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
