@@ -3,7 +3,7 @@ import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 
 const WORKER_URL = "https://diamond-bot.p2opcnymwrvsjo3mmroimjhu.workers.dev";
-const ADMIN_KEY = "diamond-admin-super-secret-2024"; // 👈 همون کلیدی که توی worker.js گذاشتی
+const ADMIN_KEY = "elyas_gang_11766"; // 👈 همون کلیدی که توی worker.js گذاشتی
 
 interface User {
   id: string;
