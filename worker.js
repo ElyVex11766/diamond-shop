@@ -80,6 +80,17 @@ async function ensureLeaderboardTable(db) {
   `).run();
 }
 
+async function ensureDailyPlaysTable(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS daily_plays (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      played_at TEXT NOT NULL
+    )
+  `).run();
+}
+
 function generateToken() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
@@ -337,7 +348,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 15. Leaderboard: ثبت رکورد (با جلوگیری از تکرار)
+    // 15. Leaderboard: ثبت رکورد + محدودیت ۵ بار در روز
     if (url.pathname === "/api/leaderboard" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -345,35 +356,47 @@ export default {
         if (!name || !time || time <= 0) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
         
         await ensureLeaderboardTable(env.DB);
+        await ensureDailyPlaysTable(env.DB);
 
-        // چک کردن اینکه آیا قبلاً رکوردی با همین اسم و پلتفرم وجود داره یا نه
+        // 👇 چک کردن محدودیت ۵ بار در روز
+        const today = new Date().toISOString().split('T')[0];
+        const countResult = await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?"
+        ).bind(name, contact, `${today}%`).first();
+        
+        const dailyPlays = countResult?.count || 0;
+
+        if (dailyPlays >= 5) {
+          return jsonResponse({ 
+            ok: false, 
+            limitReached: true, 
+            message: "شما امروز ۵ بار تست داده‌اید. فردا دوباره تلاش کنید!" 
+          }, 403);
+        }
+
+        // 👇 ثبت بازی جدید
+        await env.DB.prepare(
+          "INSERT INTO daily_plays (id, name, contact, played_at) VALUES (?, ?, ?, ?)"
+        ).bind(crypto.randomUUID(), name, contact, new Date().toISOString()).run();
+
+        // 👇 چک کردن رکورد قبلی
         const existing = await env.DB.prepare(
           "SELECT * FROM leaderboard WHERE name = ? AND contact = ?"
         ).bind(name, contact).first();
 
         if (existing) {
-          // اگه رکورد قبلی وجود داشت، فقط اگه رکورد جدید بهتر بود آپدیت کن
           if (time < existing.time) {
-            await env.DB.prepare(
-              "UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?"
-            ).bind(time, new Date().toISOString(), existing.id).run();
+            await env.DB.prepare("UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?").bind(time, new Date().toISOString(), existing.id).run();
           }
         } else {
-          // اگه کاربر جدید بود، رکورد جدید اضافه کن
           const entryId = crypto.randomUUID();
-          await env.DB.prepare(
-            "INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)"
-          ).bind(entryId, name, contact, time, new Date().toISOString()).run();
+          await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(entryId, name, contact, time, new Date().toISOString()).run();
         }
 
-        // حذف رکوردهای اضافی (فقط ۱۰ نفر برتر)
-        await env.DB.prepare(`
-          DELETE FROM leaderboard WHERE id NOT IN (
-            SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10
-          )
-        `).run();
+        // 👇 حذف رکوردهای اضافی (فقط ۱۰ نفر برتر)
+        await env.DB.prepare(`DELETE FROM leaderboard WHERE id NOT IN (SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10)`).run();
 
-        return jsonResponse({ ok: true, message: "رکورد ثبت شد" }, 201);
+        return jsonResponse({ ok: true, message: "رکورد ثبت شد", remaining: 5 - dailyPlays - 1 }, 201);
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
@@ -384,6 +407,29 @@ export default {
         await ensureLeaderboardTable(env.DB);
         const result = await env.DB.prepare("SELECT * FROM leaderboard ORDER BY time ASC LIMIT 10").all();
         return jsonResponse({ ok: true, entries: result.results || [] });
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    // 17. چک کردن محدودیت (برای نمایش به کاربر)
+    if (url.pathname === "/api/check-limit" && method === "POST") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { name, contact } = await request.json();
+        if (!name || !contact) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
+
+        await ensureDailyPlaysTable(env.DB);
+        const today = new Date().toISOString().split('T')[0];
+        const countResult = await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?"
+        ).bind(name, contact, `${today}%`).first();
+        
+        const dailyPlays = countResult?.count || 0;
+
+        return jsonResponse({ 
+          ok: true, 
+          dailyPlays, 
+          remaining: Math.max(0, 5 - dailyPlays) 
+        });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
