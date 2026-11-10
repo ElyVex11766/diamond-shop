@@ -27,7 +27,7 @@ export function AdminUser() {
   const [newPassword, setNewPassword] = useState("");
   const [newUsername, setNewUsername] = useState("");
 
-  // 👇 اطلاعات ادمین رو از localStorage می‌خونیم (یا می‌تونی سخت‌کد کنی)
+  // گرفتن اطلاعات ادمین از localStorage
   const adminUsername = localStorage.getItem("admin_username") || "";
   const adminPassword = localStorage.getItem("admin_password") || "";
 
@@ -42,11 +42,11 @@ export function AdminUser() {
       .then(res => res.json())
       .then(data => {
         if (data.ok) {
-  localStorage.setItem("admin_username", adminUsername);
-  localStorage.setItem("admin_password", adminPassword);
-  setIsLoggedIn(true);
-  fetchUsers();
-}
+          const found = data.users.find((u: User) => u.id === id);
+          if (found) {
+            setUser(found);
+            setNewUsername(found.username);
+            setNewPassword(found.password);
           }
         }
       })
