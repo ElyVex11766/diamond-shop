@@ -42,11 +42,11 @@ export function AdminUser() {
       .then(res => res.json())
       .then(data => {
         if (data.ok) {
-          const found = data.users.find((u: User) => u.id === id);
-          if (found) {
-            setUser(found);
-            setNewUsername(found.username);
-            setNewPassword(found.password);
+  localStorage.setItem("admin_username", adminUsername);
+  localStorage.setItem("admin_password", adminPassword);
+  setIsLoggedIn(true);
+  fetchUsers();
+}
           }
         }
       })
