@@ -3,16 +3,24 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { DiamondLogo } from "./DiamondLogo";
 import { useLang } from "../i18n/LanguageContext";
 import { LinkButton } from "./Button";
+import { useCart } from "../context/CartContext";
 
-export function Navbar() {
+interface Props {
+  onCartClick: () => void;
+}
+
+export function Navbar({ onCartClick }: Props) {
   const { t, lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const { items } = useCart();
   
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
   const navRef = useRef<HTMLElement>(null);
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("diamond_user");
@@ -24,7 +32,7 @@ export function Navbar() {
     { to: "/docs", label: t.nav.docs },
     { to: "/shop", label: t.nav.shop },
     { to: "/bot", label: t.nav.bot },
-    { to: "/challenge", label: "چالش" }, // 👈 تب جدید
+    { to: "/challenge", label: "چالش" },
     { to: "/dashboard", label: t.nav.dashboard },
     { to: "/status", label: t.nav.status },
   ];
@@ -81,6 +89,19 @@ export function Navbar() {
           >
             {lang === "en" ? "FA | فارسی" : "EN | English"}
           </button>
+
+          {/* 👇 آیکون سبد خرید */}
+          <button 
+            onClick={onCartClick}
+            className="relative p-2 rounded-lg bg-diamond-panel border border-diamond-border hover:border-diamond-cyan/50 transition"
+          >
+            🛒
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </button>
           
           {user ? (
             <div className="flex items-center gap-3 bg-diamond-panel border border-diamond-border px-3 py-1.5 rounded-xl">
@@ -115,6 +136,9 @@ export function Navbar() {
             </NavLink>
           ))}
           <div className="flex flex-col gap-2 pt-2">
+            <button onClick={onCartClick} className="text-sm text-white py-2">
+              🛒 سبد خرید ({totalItems})
+            </button>
             {user ? (
                <button onClick={handleLogout} className="text-sm text-red-400 py-2">خروج از حساب</button>
             ) : (
