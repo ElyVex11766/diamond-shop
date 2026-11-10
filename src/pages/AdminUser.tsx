@@ -24,16 +24,22 @@ export function AdminUser() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [newUsername, setNewUsername] = useState("");
 
-  // گرفتن اطلاعات ادمین از localStorage
   const adminUsername = localStorage.getItem("admin_username") || "";
   const adminPassword = localStorage.getItem("admin_password") || "";
 
   useEffect(() => {
     if (!id) return;
-    
+
+    // اگه ادمین لاگین نکرده بود، بفرستش به صفحه لاگین ادمین
+    if (!adminUsername || !adminPassword) {
+      navigate("/this-is-safe");
+      return;
+    }
+
     fetch(`${WORKER_URL}/api/admin/users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -47,11 +53,16 @@ export function AdminUser() {
             setUser(found);
             setNewUsername(found.username);
             setNewPassword(found.password);
+          } else {
+            setError("کاربر پیدا نشد.");
           }
+        } else {
+          setError(data.error || "خطا در دریافت اطلاعات");
         }
       })
+      .catch(() => setError("خطا در اتصال به سرور"))
       .finally(() => setLoading(false));
-  }, [id, adminUsername, adminPassword]);
+  }, [id, adminUsername, adminPassword, navigate]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -72,14 +83,15 @@ export function AdminUser() {
         alert("تغییرات با موفقیت ذخیره شد!"); 
         navigate("/this-is-safe"); 
       }
-      else alert(data.error);
+      else alert(data.error || "خطا در ذخیره تغییرات");
     } catch (err) { 
       alert("خطا در ذخیره تغییرات"); 
     }
   };
 
   if (loading) return <div className="text-center py-20 text-white">در حال بارگذاری...</div>;
-  if (!user) return <div className="text-center py-20 text-red-400">کاربر پیدا نشد</div>;
+  if (error) return <div className="text-center py-20 text-red-400">{error}</div>;
+  if (!user) return <div className="text-center py-20 text-red-400">کاربر پیدا نشد.</div>;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16" dir="rtl">
