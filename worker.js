@@ -51,6 +51,7 @@ async function ensureUsersTable(db) {
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      email TEXT,
       discord_id TEXT,
       discord_username TEXT,
       discord_avatar TEXT,
@@ -61,11 +62,11 @@ async function ensureUsersTable(db) {
     )
   `).run();
 
+  // سازگاری با جدول قدیمی
   const columns = await db.prepare("PRAGMA table_info(users)").all();
-  const hasIpCountry = (columns.results || []).some((column) => column.name === "last_ip_country");
-  if (!hasIpCountry) {
-    await db.prepare("ALTER TABLE users ADD COLUMN last_ip_country TEXT").run();
-  }
+  const existingCols = (columns.results || []).map(c => c.name);
+  if (!existingCols.includes("email")) await db.prepare("ALTER TABLE users ADD COLUMN email TEXT").run();
+  if (!existingCols.includes("last_ip_country")) await db.prepare("ALTER TABLE users ADD COLUMN last_ip_country TEXT").run();
 }
 
 async function ensureLeaderboardTable(db) {
@@ -201,7 +202,17 @@ export default {
 
         await env.DB.prepare("UPDATE users SET last_ip = ?, last_ip_country = ?, last_login = ? WHERE id = ?").bind(userIp, userIpCountry, new Date().toISOString(), user.id).run();
 
-        return jsonResponse({ ok: true, user: { id: user.id, username: user.username, discord_id: user.discord_id, discord_username: user.discord_username, discord_avatar: user.discord_avatar } });
+        return jsonResponse({ 
+          ok: true, 
+          user: { 
+            id: user.id, 
+            username: user.username, 
+            email: user.email,
+            discord_id: user.discord_id, 
+            discord_username: user.discord_username, 
+            discord_avatar: user.discord_avatar 
+          } 
+        });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
@@ -217,10 +228,16 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 6. Auth Discord
+    // 6. Auth Discord (با ایمیل و جوین خودکار)
     if (url.pathname === "/api/auth/discord" && method === "GET") {
       const userId = url.searchParams.get("user_id") || "";
-      const params = new URLSearchParams({ client_id: DISCORD_CLIENT_ID, redirect_uri: DISCORD_REDIRECT_URI, response_type: "code", scope: "identify", state: userId });
+      const params = new URLSearchParams({ 
+        client_id: DISCORD_CLIENT_ID, 
+        redirect_uri: DISCORD_REDIRECT_URI, 
+        response_type: "code", 
+        scope: "identify email guilds.join", // 👈 اضافه شد
+        state: userId 
+      });
       return Response.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`, 302);
     }
 
@@ -230,18 +247,51 @@ export default {
       const state = url.searchParams.get("state");
       if (!code) return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=no_code`, 302);
       try {
-        const tokenRes = await fetch("https://discord.com/api/oauth2/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: DISCORD_CLIENT_ID, client_secret: DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: DISCORD_REDIRECT_URI }) });
+        const tokenRes = await fetch("https://discord.com/api/oauth2/token", { 
+          method: "POST", 
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }, 
+          body: new URLSearchParams({ 
+            client_id: DISCORD_CLIENT_ID, 
+            client_secret: DISCORD_CLIENT_SECRET, 
+            grant_type: "authorization_code", 
+            code, 
+            redirect_uri: DISCORD_REDIRECT_URI 
+          }) 
+        });
         if (!tokenRes.ok) return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=token_failed`, 302);
         const tokenData = await tokenRes.json();
         const userRes = await fetch("https://discord.com/api/v10/users/@me", { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
         if (!userRes.ok) return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=user_failed`, 302);
         const userData = await userRes.json();
         const avatarUrl = userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
-        if (state && env.DB) { await ensureUsersTable(env.DB); await env.DB.prepare("UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ? WHERE id = ?").bind(userData.id, userData.username, avatarUrl, state).run(); }
+
+        // 👇 جوین خودکار کاربر به سرور
+        try {
+          await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userData.id}`, {
+            method: "PUT",
+            headers: {
+              "Authorization": `Bot ${env.BOT_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              access_token: tokenData.access_token,
+            }),
+          });
+        } catch (err) {
+          console.error("Error joining user to guild:", err);
+        }
+
+        // 👇 ذخیره ایمیل و اطلاعات دیسکورد توی دیتابیس
+        if (state && env.DB) { 
+          await ensureUsersTable(env.DB); 
+          await env.DB.prepare("UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ?, email = ? WHERE id = ?").bind(userData.id, userData.username, avatarUrl, userData.email || null, state).run(); 
+        }
+
         const redirectUrl = new URL(`${ALLOWED_ORIGIN}/dashboard`);
         redirectUrl.searchParams.set("discord_id", userData.id);
         redirectUrl.searchParams.set("discord_username", userData.username);
         redirectUrl.searchParams.set("discord_avatar", avatarUrl);
+        if (userData.email) redirectUrl.searchParams.set("email", userData.email);
         return Response.redirect(redirectUrl.toString(), 302);
       } catch (error) { return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=server_error`, 302); }
     }
@@ -358,42 +408,23 @@ export default {
         await ensureLeaderboardTable(env.DB);
         await ensureDailyPlaysTable(env.DB);
 
-        // 👇 چک کردن محدودیت ۵ بار در روز
         const today = new Date().toISOString().split('T')[0];
-        const countResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?"
-        ).bind(name, contact, `${today}%`).first();
-        
+        const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?").bind(name, contact, `${today}%`).first();
         const dailyPlays = countResult?.count || 0;
 
         if (dailyPlays >= 5) {
-          return jsonResponse({ 
-            ok: false, 
-            limitReached: true, 
-            message: "شما امروز ۵ بار تست داده‌اید. فردا دوباره تلاش کنید!" 
-          }, 403);
+          return jsonResponse({ ok: false, limitReached: true, message: "شما امروز ۵ بار تست داده‌اید. فردا دوباره تلاش کنید!" }, 403);
         }
 
-        // 👇 ثبت بازی جدید
-        await env.DB.prepare(
-          "INSERT INTO daily_plays (id, name, contact, played_at) VALUES (?, ?, ?, ?)"
-        ).bind(crypto.randomUUID(), name, contact, new Date().toISOString()).run();
+        await env.DB.prepare("INSERT INTO daily_plays (id, name, contact, played_at) VALUES (?, ?, ?, ?)").bind(crypto.randomUUID(), name, contact, new Date().toISOString()).run();
 
-        // 👇 چک کردن رکورد قبلی
-        const existing = await env.DB.prepare(
-          "SELECT * FROM leaderboard WHERE name = ? AND contact = ?"
-        ).bind(name, contact).first();
-
+        const existing = await env.DB.prepare("SELECT * FROM leaderboard WHERE name = ? AND contact = ?").bind(name, contact).first();
         if (existing) {
-          if (time < existing.time) {
-            await env.DB.prepare("UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?").bind(time, new Date().toISOString(), existing.id).run();
-          }
+          if (time < existing.time) await env.DB.prepare("UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?").bind(time, new Date().toISOString(), existing.id).run();
         } else {
-          const entryId = crypto.randomUUID();
-          await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(entryId, name, contact, time, new Date().toISOString()).run();
+          await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(crypto.randomUUID(), name, contact, time, new Date().toISOString()).run();
         }
 
-        // 👇 حذف رکوردهای اضافی (فقط ۱۰ نفر برتر)
         await env.DB.prepare(`DELETE FROM leaderboard WHERE id NOT IN (SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10)`).run();
 
         return jsonResponse({ ok: true, message: "رکورد ثبت شد", remaining: 5 - dailyPlays - 1 }, 201);
@@ -410,7 +441,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 17. چک کردن محدودیت (برای نمایش به کاربر)
+    // 17. چک کردن محدودیت
     if (url.pathname === "/api/check-limit" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -419,17 +450,10 @@ export default {
 
         await ensureDailyPlaysTable(env.DB);
         const today = new Date().toISOString().split('T')[0];
-        const countResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?"
-        ).bind(name, contact, `${today}%`).first();
-        
+        const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?").bind(name, contact, `${today}%`).first();
         const dailyPlays = countResult?.count || 0;
 
-        return jsonResponse({ 
-          ok: true, 
-          dailyPlays, 
-          remaining: Math.max(0, 5 - dailyPlays) 
-        });
+        return jsonResponse({ ok: true, dailyPlays, remaining: Math.max(0, 5 - dailyPlays) });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
