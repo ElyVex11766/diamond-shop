@@ -29,12 +29,9 @@ export function Shop() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8 py-16 relative">
-      
-      {/* عنوان */}
       <SectionTitle title={t.shop.title} subtitle={t.shop.subtitle} />
 
-      {/* لیست محصولات */}
-      <div className="space-y-12 pb-24"> {/* pb-24 برای فضای سبد شناور */}
+      <div className="space-y-12 pb-24">
         {categories.map((cat) => {
           const catProducts = allProducts.filter(p => p.category === cat.id);
           if (catProducts.length === 0) return null;
@@ -89,16 +86,28 @@ export function Shop() {
                           </span>
                           
                           {cartItem ? (
-                            <div className="flex items-center gap-2 bg-diamond-bg rounded-xl p-1.5 border border-diamond-cyan/30 shadow-glow-sm">
+                            <div className="flex items-center gap-1.5 bg-diamond-bg rounded-xl p-1.5 border border-diamond-cyan/30 shadow-glow-sm">
                               <button 
                                 onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
                                 className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-red-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 -
                               </button>
-                              <span className="text-white text-sm font-extrabold w-6 text-center">
-                                {cartItem.quantity}
-                              </span>
+                              
+                              {/* 👇 اینجا input گذاشتم */}
+                              <input 
+                                type="number"
+                                min="1"
+                                value={cartItem.quantity}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  if (!isNaN(val) && val > 0) {
+                                    updateQuantity(item.id, val);
+                                  }
+                                }}
+                                className="w-10 h-7 text-center bg-diamond-panel border border-white/10 rounded-lg text-white text-sm font-bold focus:outline-none focus:border-diamond-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              
                               <button 
                                 onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
                                 className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-emerald-500/30 rounded-lg transition-colors text-lg font-bold"
@@ -137,30 +146,25 @@ export function Shop() {
         })}
       </div>
 
-      {/* 👇 سبد خرید شناور (دایره‌ای) */}
+      {/* سبد خرید شناور */}
       {items.length > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
           className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-diamond-blue hover:bg-blue-500 shadow-[0_0_30px_rgba(47,129,247,0.5)] flex items-center justify-center transition-all hover:scale-110"
         >
-          {/* 👇 عکس سبد خرید رو اینجا بذار (بعداً) */}
-          <img src="/images/ShoppingCard.png" alt="Cart" className="w-8 h-8 object-contain" />
-          {items.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-              {items.reduce((sum, i) => sum + i.quantity, 0)}
-            </span>
-          )}
+          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+            {items.reduce((sum, i) => sum + i.quantity, 0)}
+          </span>
         </button>
       )}
 
-      {/* مودال کیپ */}
       <CapeModal 
         isOpen={!!selectedCape} 
         onClose={() => setSelectedCape(null)}
         selectedCape={selectedCape}
       />
 
-      {/* پنل سبد خرید */}
       <CartSidebar 
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)} 
