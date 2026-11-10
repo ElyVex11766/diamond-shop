@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { LinkButton } from "../components/Button";
 import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
@@ -6,7 +5,6 @@ import { useLang } from "../i18n/LanguageContext";
 
 export function Bot() {
   const { t } = useLang();
-  const [activeTab, setActiveTab] = useState<"info">("info");
 
   const features = [
     { title: t.features.giveaway, desc: t.features.giveawayDesc, icon: "🎉" },
