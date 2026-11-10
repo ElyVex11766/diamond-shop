@@ -28,17 +28,18 @@ export function AdminUser() {
   const [newPassword, setNewPassword] = useState("");
   const [newUsername, setNewUsername] = useState("");
 
-  const adminUsername = localStorage.getItem("admin_username") || "";
-  const adminPassword = localStorage.getItem("admin_password") || "";
-
   useEffect(() => {
-    if (!id) return;
-
-    // اگه ادمین لاگین نکرده بود، بفرستش به صفحه لاگین ادمین
-    if (!adminUsername || !adminPassword) {
+    // 👇 چک کردن لاگین ادمین
+    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+    if (!isLoggedIn) {
       navigate("/this-is-safe");
       return;
     }
+
+    if (!id) return;
+
+    const adminUsername = localStorage.getItem("admin_username") || "";
+    const adminPassword = localStorage.getItem("admin_password") || "";
 
     fetch(`${WORKER_URL}/api/admin/users`, {
       method: "POST",
@@ -62,10 +63,13 @@ export function AdminUser() {
       })
       .catch(() => setError("خطا در اتصال به سرور"))
       .finally(() => setLoading(false));
-  }, [id, adminUsername, adminPassword, navigate]);
+  }, [id, navigate]);
 
   const handleSave = async () => {
     if (!user) return;
+    const adminUsername = localStorage.getItem("admin_username") || "";
+    const adminPassword = localStorage.getItem("admin_password") || "";
+
     try {
       const res = await fetch(`${WORKER_URL}/api/admin/update-user`, {
         method: "POST",
