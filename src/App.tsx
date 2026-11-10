@@ -12,7 +12,7 @@ import { NotFound } from "./pages/NotFound";
 import { Bot } from "./pages/Bot";
 import { OrderPage } from "./pages/OrderPage";
 import { Admin } from "./pages/Admin";
-import { AdminUser } from "./pages/AdminUser"; // 👈 اضافه شد
+import { AdminUser } from "./pages/AdminUser";
 
 export default function App() {
   return (
@@ -29,8 +29,15 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/bot" element={<Bot />} />
             <Route path="/order/:token" element={<OrderPage />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/user/:id" element={<AdminUser />} /> {/* 👈 اضافه شد */}
+            
+            {/* 👇 مسیر مخفی ادمین */}
+            <Route path="/this-is-safe" element={<Admin />} />
+            <Route path="/this-is-safe/user/:id" element={<AdminUser />} />
+            
+            {/* 👇 هر کسی /admin زد، به NotFound میره */}
+            <Route path="/admin" element={<NotFound />} />
+            <Route path="/admin/*" element={<NotFound />} />
+            
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
