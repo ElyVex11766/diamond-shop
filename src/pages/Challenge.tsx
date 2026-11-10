@@ -1,10 +1,7 @@
 import { SectionTitle } from "../components/SectionTitle";
 import { ReactionTest } from "../components/ReactionTest";
-import { useLang } from "../i18n/LanguageContext";
 
 export function Challenge() {
-  const { t } = useLang();
-
   return (
     <div className="mx-auto max-w-5xl px-4 md:px-8 py-16">
       <SectionTitle 
