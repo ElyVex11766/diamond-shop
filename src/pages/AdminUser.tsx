@@ -10,6 +10,7 @@ interface User {
   id: string;
   username: string;
   password: string;
+  email: string | null;
   discord_id: string | null;
   discord_username: string | null;
   discord_avatar: string | null;
@@ -91,6 +92,12 @@ export function AdminUser() {
           <div>
             <label className="block text-sm text-diamond-muted mb-1">رمز عبور</label>
             <input type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-diamond-cyan" />
+          </div>
+          <div>
+            <label className="block text-sm text-diamond-muted mb-1">ایمیل</label>
+            <div className="bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white font-mono text-sm">
+              {user.email || "وارد نشده"}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
