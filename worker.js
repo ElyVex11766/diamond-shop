@@ -6,8 +6,8 @@ const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلی
 const DISCORD_REDIRECT_URI = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
 // 👇 اکانت ادمین (این‌ها رو خودت پر کن)
-const ADMIN_USERNAME = "elyas"; // 👈 یوزرنیم ادمین رو اینجا بذار (مثلاً "elyas")
-const ADMIN_PASSWORD = "elyas_gang_11766"; // 👈 پسورد ادمین رو اینجا بذار (مثلاً "Elyas@2024!Secure")
+const ADMIN_USERNAME = "elyas"; // 👈 یوزرنیم ادمین
+const ADMIN_PASSWORD = "elyas_gang_11766"; // 👈 پسورد ادمین
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -28,7 +28,7 @@ function isBotAuthorized(request, env) {
 }
 
 function isAdminAuthorized(username, password) {
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) return false; // اگه خالی باشن، هیچ‌کس نمی‌تونه وارد بشه
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) return false;
   return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
 }
 
@@ -374,7 +374,7 @@ export default {
       return jsonResponse({ ok: true, acknowledged: true });
     }
 
-    // 13. Admin Login (با یوزرنیم و پسورد)
+    // 13. Admin Login
     if (url.pathname === "/api/admin/login" && method === "POST") {
       try {
         const { admin_username, admin_password } = await request.json();
@@ -387,7 +387,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 14. Admin Users (فقط با یوزرنیم و پسورد ادمین)
+    // 14. Admin Users
     if (url.pathname === "/api/admin/users" && method === "POST") {
       try {
         const { admin_username, admin_password } = await request.json();
@@ -403,7 +403,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 15. Admin Update User (فقط با یوزرنیم و پسورد ادمین)
+    // 15. Admin Update User
     if (url.pathname === "/api/admin/update-user" && method === "POST") {
       try {
         const { admin_username, admin_password, user_id, new_username, new_password } = await request.json();
