@@ -13,6 +13,7 @@ import { Bot } from "./pages/Bot";
 import { OrderPage } from "./pages/OrderPage";
 import { Admin } from "./pages/Admin";
 import { AdminUser } from "./pages/AdminUser";
+import { Challenge } from "./pages/Challenge"; // 👈 اضافه شد
 
 export default function App() {
   return (
@@ -28,16 +29,12 @@ export default function App() {
             <Route path="/status" element={<Status />} />
             <Route path="/login" element={<Login />} />
             <Route path="/bot" element={<Bot />} />
+            <Route path="/challenge" element={<Challenge />} /> {/* 👈 اضافه شد */}
             <Route path="/order/:token" element={<OrderPage />} />
-            
-            {/* 👇 مسیر مخفی ادمین */}
             <Route path="/this-is-safe" element={<Admin />} />
             <Route path="/this-is-safe/user/:id" element={<AdminUser />} />
-            
-            {/* 👇 هر کسی /admin زد، به NotFound میره */}
             <Route path="/admin" element={<NotFound />} />
             <Route path="/admin/*" element={<NotFound />} />
-            
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
