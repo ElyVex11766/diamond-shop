@@ -5,6 +5,7 @@ import { SectionTitle } from "../components/SectionTitle";
 import { useLang } from "../i18n/LanguageContext";
 import { allProducts, type Product } from "./products";
 import { CapeModal } from "../components/CapeModal";
+import { CartSidebar } from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
 
 const formatPrice = (price: number) => {
@@ -14,6 +15,7 @@ const formatPrice = (price: number) => {
 export function Shop() {
   const { t, lang } = useLang();
   const [selectedCape, setSelectedCape] = useState<Product | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { items, addItem, removeItem, updateQuantity } = useCart();
 
   const categories = [
@@ -26,10 +28,13 @@ export function Shop() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-8 py-16">
-      <SectionTitle title={t.shop.title} subtitle={t.shop.subtitle} />
+    <div className="mx-auto max-w-7xl px-4 md:px-8 py-16 relative">
       
-      <div className="space-y-12">
+      {/* عنوان */}
+      <SectionTitle title={t.shop.title} subtitle={t.shop.subtitle} />
+
+      {/* لیست محصولات */}
+      <div className="space-y-12 pb-24"> {/* pb-24 برای فضای سبد شناور */}
         {categories.map((cat) => {
           const catProducts = allProducts.filter(p => p.category === cat.id);
           if (catProducts.length === 0) return null;
@@ -78,31 +83,33 @@ export function Shop() {
                           </Button>
                         )}
 
-                        <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center justify-between mt-2">
                           <span className="text-diamond-cyan font-bold text-sm">
                             {formatPrice(item.price)}
                           </span>
                           
                           {cartItem ? (
-                            <div className="flex items-center gap-1 bg-diamond-panel rounded-lg p-1 border border-diamond-border">
+                            <div className="flex items-center gap-2 bg-diamond-bg rounded-xl p-1.5 border border-diamond-cyan/30 shadow-glow-sm">
                               <button 
                                 onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
-                                className="w-6 h-6 flex items-center justify-center text-white hover:bg-white/10 rounded"
+                                className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-red-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 -
                               </button>
-                              <span className="text-white text-xs font-bold w-4 text-center">{cartItem.quantity}</span>
+                              <span className="text-white text-sm font-extrabold w-6 text-center">
+                                {cartItem.quantity}
+                              </span>
                               <button 
                                 onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
-                                className="w-6 h-6 flex items-center justify-center text-white hover:bg-white/10 rounded"
+                                className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-emerald-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 +
                               </button>
                               <button 
                                 onClick={() => removeItem(item.id)}
-                                className="w-6 h-6 flex items-center justify-center text-red-400 hover:bg-red-500/20 rounded text-xs"
+                                className="w-7 h-7 flex items-center justify-center text-red-400 bg-diamond-panel hover:bg-red-500/20 rounded-lg transition-colors text-sm"
                               >
-                                ×
+                                ✕
                               </button>
                             </div>
                           ) : (
@@ -114,7 +121,7 @@ export function Shop() {
                                 quantity: 1,
                                 image: item.image,
                               })}
-                              className="text-[10px] px-3 py-1.5 h-8 bg-emerald-600 hover:bg-emerald-500 text-white border-none font-bold transition-colors"
+                              className="text-[11px] px-4 py-2 h-9 bg-emerald-600 hover:bg-emerald-500 text-white border-none font-bold rounded-xl shadow-glow-sm transition-all hover:scale-105"
                             >
                               افزودن به سبد
                             </Button>
@@ -130,10 +137,33 @@ export function Shop() {
         })}
       </div>
 
+      {/* 👇 سبد خرید شناور (دایره‌ای) */}
+      {items.length > 0 && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-diamond-blue hover:bg-blue-500 shadow-[0_0_30px_rgba(47,129,247,0.5)] flex items-center justify-center transition-all hover:scale-110"
+        >
+          {/* 👇 عکس سبد خرید رو اینجا بذار (بعداً) */}
+          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          {items.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+              {items.reduce((sum, i) => sum + i.quantity, 0)}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* مودال کیپ */}
       <CapeModal 
         isOpen={!!selectedCape} 
         onClose={() => setSelectedCape(null)}
         selectedCape={selectedCape}
+      />
+
+      {/* پنل سبد خرید */}
+      <CartSidebar 
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)} 
       />
     </div>
   );
