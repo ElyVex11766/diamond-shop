@@ -24,6 +24,7 @@ export function Navbar() {
     { to: "/docs", label: t.nav.docs },
     { to: "/shop", label: t.nav.shop },
     { to: "/bot", label: t.nav.bot },
+    { to: "/challenge", label: "چالش" }, // 👈 تب جدید
     { to: "/dashboard", label: t.nav.dashboard },
     { to: "/status", label: t.nav.status },
   ];
