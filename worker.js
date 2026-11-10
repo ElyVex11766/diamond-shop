@@ -5,7 +5,7 @@ const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیش
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
 
-// 👇 اکانت ادمین (این‌ها رو خودت پر کن)
+// 👇 اکانت ادمین
 const ADMIN_USERNAME = "elyas"; // 👈 یوزرنیم ادمین
 const ADMIN_PASSWORD = "elyas_gang_11766"; // 👈 پسورد ادمین
 
@@ -378,7 +378,6 @@ export default {
     if (url.pathname === "/api/admin/login" && method === "POST") {
       try {
         const { admin_username, admin_password } = await request.json();
-        
         if (isAdminAuthorized(admin_username, admin_password)) {
           return jsonResponse({ ok: true, message: "ورود موفق" });
         } else {
@@ -387,18 +386,18 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 14. Admin Users
+    // 14. Admin Users (بدون رمز عبور)
     if (url.pathname === "/api/admin/users" && method === "POST") {
       try {
         const { admin_username, admin_password } = await request.json();
-        
         if (!isAdminAuthorized(admin_username, admin_password)) {
           return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
         }
-
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureUsersTable(env.DB);
-        const result = await env.DB.prepare("SELECT * FROM users ORDER BY created_at DESC").all();
+        const result = await env.DB.prepare(
+          "SELECT id, username, email, discord_id, discord_username, discord_avatar, created_at, last_ip, last_ip_country, last_login FROM users ORDER BY created_at DESC"
+        ).all();
         return jsonResponse({ ok: true, users: result.results || [] });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
@@ -407,11 +406,9 @@ export default {
     if (url.pathname === "/api/admin/update-user" && method === "POST") {
       try {
         const { admin_username, admin_password, user_id, new_username, new_password } = await request.json();
-        
         if (!isAdminAuthorized(admin_username, admin_password)) {
           return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
         }
-
         if (!user_id) return jsonResponse({ ok: false, error: "آیدی کاربر نامعتبر" }, 400);
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureUsersTable(env.DB);
