@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
@@ -25,6 +25,18 @@ export function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // چک کردن اینکه آیا قبلاً لاگین کرده یا نه
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+    if (isLoggedIn) {
+      setIsLoggedIn(true);
+      const savedUsername = localStorage.getItem("admin_username") || "";
+      const savedPassword = localStorage.getItem("admin_password") || "";
+      setAdminUsername(savedUsername);
+      setAdminPassword(savedPassword);
+    }
+  }, []);
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -46,6 +58,12 @@ export function Admin() {
     }
   };
 
+  useEffect(() => {
+    if (isLoggedIn && adminUsername && adminPassword) {
+      fetchUsers();
+    }
+  }, [isLoggedIn]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -64,14 +82,24 @@ export function Admin() {
       const data = await res.json();
 
       if (data.ok) {
+        localStorage.setItem("admin_logged_in", "true");
+        localStorage.setItem("admin_username", adminUsername);
+        localStorage.setItem("admin_password", adminPassword);
         setIsLoggedIn(true);
-        fetchUsers();
       } else {
         setError(data.error || "نام کاربری یا رمز عبور اشتباه است");
       }
     } catch (err) {
       setError("خطا در اتصال به سرور");
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_logged_in");
+    localStorage.removeItem("admin_username");
+    localStorage.removeItem("admin_password");
+    setIsLoggedIn(false);
+    setUsers([]);
   };
 
   if (!isLoggedIn) {
@@ -106,7 +134,7 @@ export function Admin() {
     <div className="mx-auto max-w-6xl px-4 py-16">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">پنل مدیریت کاربران</h1>
-        <Button onClick={() => setIsLoggedIn(false)} variant="secondary">خروج</Button>
+        <Button onClick={handleLogout} variant="secondary">خروج</Button>
       </div>
 
       {loading ? (
