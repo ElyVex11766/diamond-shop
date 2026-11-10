@@ -8,7 +8,6 @@ const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 interface User {
   id: string;
   username: string;
-  password: string;
   email: string | null;
   discord_id: string | null;
   discord_username: string | null;
@@ -25,15 +24,12 @@ export function Admin() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // چک کردن اینکه آیا قبلاً لاگین کرده یا نه
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
     if (isLoggedIn) {
       setIsLoggedIn(true);
-      const savedUsername = localStorage.getItem("admin_username") || "";
-      const savedPassword = localStorage.getItem("admin_password") || "";
-      setAdminUsername(savedUsername);
-      setAdminPassword(savedPassword);
+      setAdminUsername(localStorage.getItem("admin_username") || "");
+      setAdminPassword(localStorage.getItem("admin_password") || "");
     }
   }, []);
 
@@ -46,33 +42,20 @@ export function Admin() {
         body: JSON.stringify({ admin_username: adminUsername, admin_password: adminPassword }),
       });
       const data = await res.json();
-      if (data.ok) {
-        setUsers(data.users);
-      } else {
-        setError(data.error || "خطا در دریافت اطلاعات");
-      }
-    } catch (err) {
-      setError("خطا در اتصال به سرور");
-    } finally {
-      setLoading(false);
-    }
+      if (data.ok) setUsers(data.users);
+      else setError(data.error || "خطا در دریافت اطلاعات");
+    } catch (err) { setError("خطا در اتصال به سرور"); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
-    if (isLoggedIn && adminUsername && adminPassword) {
-      fetchUsers();
-    }
+    if (isLoggedIn && adminUsername && adminPassword) fetchUsers();
   }, [isLoggedIn]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
-    if (!adminUsername || !adminPassword) {
-      setError("لطفاً نام کاربری و رمز عبور را وارد کنید.");
-      return;
-    }
-
+    if (!adminUsername || !adminPassword) { setError("لطفاً نام کاربری و رمز عبور را وارد کنید."); return; }
     try {
       const res = await fetch(`${WORKER_URL}/api/admin/login`, {
         method: "POST",
@@ -80,18 +63,13 @@ export function Admin() {
         body: JSON.stringify({ admin_username: adminUsername, admin_password: adminPassword }),
       });
       const data = await res.json();
-
       if (data.ok) {
         localStorage.setItem("admin_logged_in", "true");
         localStorage.setItem("admin_username", adminUsername);
         localStorage.setItem("admin_password", adminPassword);
         setIsLoggedIn(true);
-      } else {
-        setError(data.error || "نام کاربری یا رمز عبور اشتباه است");
-      }
-    } catch (err) {
-      setError("خطا در اتصال به سرور");
-    }
+      } else setError(data.error || "نام کاربری یا رمز عبور اشتباه است");
+    } catch (err) { setError("خطا در اتصال به سرور"); }
   };
 
   const handleLogout = () => {
@@ -108,20 +86,8 @@ export function Admin() {
         <Card className="w-full max-w-md p-8 text-center">
           <h1 className="text-2xl font-bold text-white mb-6">🔐 پنل ادمین</h1>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="text"
-              placeholder="نام کاربری ادمین"
-              value={adminUsername}
-              onChange={(e) => setAdminUsername(e.target.value)}
-              className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white text-center focus:outline-none focus:border-diamond-cyan"
-            />
-            <input
-              type="password"
-              placeholder="رمز عبور ادمین"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white text-center focus:outline-none focus:border-diamond-cyan"
-            />
+            <input type="text" placeholder="نام کاربری ادمین" value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white text-center focus:outline-none focus:border-diamond-cyan" />
+            <input type="password" placeholder="رمز عبور ادمین" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white text-center focus:outline-none focus:border-diamond-cyan" />
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <Button type="submit" className="w-full">ورود</Button>
           </form>
@@ -145,7 +111,6 @@ export function Admin() {
             <thead className="bg-diamond-bg border-b border-diamond-border text-diamond-muted">
               <tr>
                 <th className="px-4 py-3">نام کاربری</th>
-                <th className="px-4 py-3">رمز عبور</th>
                 <th className="px-4 py-3">ایمیل</th>
                 <th className="px-4 py-3">دیسکورد</th>
                 <th className="px-4 py-3">آخرین IP</th>
@@ -156,17 +121,13 @@ export function Admin() {
               {users.map((user) => (
                 <tr key={user.id} className="border-b border-diamond-border/50 hover:bg-white/5">
                   <td className="px-4 py-3 text-white">{user.username}</td>
-                  <td className="px-4 py-3 text-white font-mono">{user.password}</td>
                   <td className="px-4 py-3 text-diamond-muted font-mono text-xs">{user.email || "وارد نشده"}</td>
                   <td className="px-4 py-3 text-diamond-cyan">
                     {user.discord_username ? `${user.discord_username} (${user.discord_id})` : "متصل نیست"}
                   </td>
                   <td className="px-4 py-3 text-diamond-muted font-mono text-xs">{user.last_ip || "نامشخص"}</td>
                   <td className="px-4 py-3">
-                    <Button
-                      onClick={() => navigate(`/this-is-safe/user/${user.id}`)}
-                      className="text-xs px-3 py-1 bg-diamond-blue/20 text-diamond-cyan hover:bg-diamond-blue/30"
-                    >
+                    <Button onClick={() => navigate(`/this-is-safe/user/${user.id}`)} className="text-xs px-3 py-1 bg-diamond-blue/20 text-diamond-cyan hover:bg-diamond-blue/30">
                       مشاهده / ویرایش
                     </Button>
                   </td>
