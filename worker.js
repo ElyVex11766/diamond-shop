@@ -4,7 +4,10 @@ const GUILD_ID = "1551236517442224319";
 const DISCORD_CLIENT_ID = "1557796189422755952"; // 👈 آیدی اپلیکیشن دیسکوردت
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD"; // 👈 کلید مخفی اپلیکیشن
 const DISCORD_REDIRECT_URI = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev/api/auth/callback";
-const ADMIN_KEY = "elyas_gang_11766"; // 👈 کلید ادمین رو عوض کن
+
+// 👇 اکانت ادمین (این‌ها رو خودت پر کن)
+const ADMIN_USERNAME = "elyas"; // 👈 یوزرنیم ادمین رو اینجا بذار (مثلاً "elyas")
+const ADMIN_PASSWORD = "elyas_gang_11766"; // 👈 پسورد ادمین رو اینجا بذار (مثلاً "Elyas@2024!Secure")
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -24,9 +27,9 @@ function isBotAuthorized(request, env) {
   return Boolean(expected) && supplied === `Bearer ${expected}`;
 }
 
-function isAdminAuthorized(request) {
-  const auth = String(request.headers.get("Authorization") || "");
-  return auth === `Bearer ${ADMIN_KEY}`;
+function isAdminAuthorized(username, password) {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) return false; // اگه خالی باشن، هیچ‌کس نمی‌تونه وارد بشه
+  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
 }
 
 async function ensureOrdersTable(db) {
@@ -62,7 +65,6 @@ async function ensureUsersTable(db) {
     )
   `).run();
 
-  // سازگاری با جدول قدیمی
   const columns = await db.prepare("PRAGMA table_info(users)").all();
   const existingCols = (columns.results || []).map(c => c.name);
   if (!existingCols.includes("email")) await db.prepare("ALTER TABLE users ADD COLUMN email TEXT").run();
@@ -228,14 +230,14 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 6. Auth Discord (با ایمیل و جوین خودکار)
+    // 6. Auth Discord
     if (url.pathname === "/api/auth/discord" && method === "GET") {
       const userId = url.searchParams.get("user_id") || "";
       const params = new URLSearchParams({ 
         client_id: DISCORD_CLIENT_ID, 
         redirect_uri: DISCORD_REDIRECT_URI, 
         response_type: "code", 
-        scope: "identify email guilds.join", // 👈 اضافه شد
+        scope: "identify email guilds.join", 
         state: userId 
       });
       return Response.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`, 302);
@@ -265,7 +267,7 @@ export default {
         const userData = await userRes.json();
         const avatarUrl = userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
 
-        // 👇 جوین خودکار کاربر به سرور
+        // جوین خودکار کاربر به سرور
         try {
           await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userData.id}`, {
             method: "PUT",
@@ -281,7 +283,7 @@ export default {
           console.error("Error joining user to guild:", err);
         }
 
-        // 👇 ذخیره ایمیل و اطلاعات دیسکورد توی دیتابیس
+        // ذخیره ایمیل و اطلاعات دیسکورد
         if (state && env.DB) { 
           await ensureUsersTable(env.DB); 
           await env.DB.prepare("UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ?, email = ? WHERE id = ?").bind(userData.id, userData.username, avatarUrl, userData.email || null, state).run(); 
@@ -372,10 +374,28 @@ export default {
       return jsonResponse({ ok: true, acknowledged: true });
     }
 
-    // 13. Admin Users
-    if (url.pathname === "/api/admin/users" && method === "GET") {
-      if (!isAdminAuthorized(request)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+    // 13. Admin Login (با یوزرنیم و پسورد)
+    if (url.pathname === "/api/admin/login" && method === "POST") {
       try {
+        const { admin_username, admin_password } = await request.json();
+        
+        if (isAdminAuthorized(admin_username, admin_password)) {
+          return jsonResponse({ ok: true, message: "ورود موفق" });
+        } else {
+          return jsonResponse({ ok: false, error: "نام کاربری یا رمز عبور اشتباه است" }, 401);
+        }
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    // 14. Admin Users (فقط با یوزرنیم و پسورد ادمین)
+    if (url.pathname === "/api/admin/users" && method === "POST") {
+      try {
+        const { admin_username, admin_password } = await request.json();
+        
+        if (!isAdminAuthorized(admin_username, admin_password)) {
+          return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+        }
+
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureUsersTable(env.DB);
         const result = await env.DB.prepare("SELECT * FROM users ORDER BY created_at DESC").all();
@@ -383,13 +403,17 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 14. Admin Update User
+    // 15. Admin Update User (فقط با یوزرنیم و پسورد ادمین)
     if (url.pathname === "/api/admin/update-user" && method === "POST") {
-      if (!isAdminAuthorized(request)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
       try {
-        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
-        const { user_id, new_username, new_password } = await request.json();
+        const { admin_username, admin_password, user_id, new_username, new_password } = await request.json();
+        
+        if (!isAdminAuthorized(admin_username, admin_password)) {
+          return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+        }
+
         if (!user_id) return jsonResponse({ ok: false, error: "آیدی کاربر نامعتبر" }, 400);
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureUsersTable(env.DB);
         if (new_username && new_password) await env.DB.prepare("UPDATE users SET username = ?, password = ? WHERE id = ?").bind(new_username, new_password, user_id).run();
         else if (new_username) await env.DB.prepare("UPDATE users SET username = ? WHERE id = ?").bind(new_username, user_id).run();
@@ -398,7 +422,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 15. Leaderboard: ثبت رکورد + محدودیت ۵ بار در روز
+    // 16. Leaderboard: ثبت رکورد + محدودیت ۵ بار در روز
     if (url.pathname === "/api/leaderboard" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -431,7 +455,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 16. Leaderboard: دریافت ۱۰ نفر برتر
+    // 17. Leaderboard: دریافت ۱۰ نفر برتر
     if (url.pathname === "/api/leaderboard" && method === "GET") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -441,7 +465,7 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 17. چک کردن محدودیت
+    // 18. چک کردن محدودیت
     if (url.pathname === "/api/check-limit" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
