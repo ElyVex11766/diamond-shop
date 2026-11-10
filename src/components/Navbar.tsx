@@ -4,11 +4,7 @@ import { DiamondLogo } from "./DiamondLogo";
 import { useLang } from "../i18n/LanguageContext";
 import { LinkButton } from "./Button";
 
-interface Props {
-  onCartClick?: () => void;
-}
-
-export function Navbar({ onCartClick }: Props) {
+export function Navbar() {
   const { t, lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   const location = useLocation();
