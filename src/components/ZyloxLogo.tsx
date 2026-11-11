@@ -16,7 +16,6 @@ export function ZyloxLogo({ size = 36, withText = true, className = "" }: Props)
         aria-hidden="true"
         className="drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]"
       >
-        {/* حرف Z سفید */}
         <path 
           d="M14 12 H50 L14 52 H50" 
           stroke="#ffffff" 
@@ -24,7 +23,6 @@ export function ZyloxLogo({ size = 36, withText = true, className = "" }: Props)
           strokeLinecap="round" 
           strokeLinejoin="round" 
         />
-        {/* نقطه‌های تزئینی سفید */}
         <circle cx="50" cy="12" r="3" fill="#ffffff" />
         <circle cx="14" cy="52" r="3" fill="#ffffff" />
       </svg>
