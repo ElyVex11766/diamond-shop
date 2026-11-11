@@ -14,7 +14,6 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // 👇 استیت برای اینکه کدوم فیلد فعاله (یوزرنیم یا پسورد)
   const [activeField, setActiveField] = useState<"username" | "password">("username");
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -24,19 +23,17 @@ export function Login() {
     if (savedUser) navigate("/dashboard");
   }, [navigate]);
 
-  // 👇 تابعی که کیبورد صداش می‌زنه
   const handleVirtualKeyPress = (key: string) => {
     if (activeField === "username") {
       if (key === "BACKSPACE") setUsername((prev) => prev.slice(0, -1));
-      else if (key === "ENTER") {
-        // اگه Enter زد، برو به فیلد بعدی
-        setActiveField("password");
-      } else setUsername((prev) => prev + key);
+      else if (key === "ENTER") setActiveField("password");
+      else setUsername((prev) => prev + key);
     } else {
       if (key === "BACKSPACE") setPassword((prev) => prev.slice(0, -1));
       else if (key === "ENTER") {
-        // اگه Enter زد، فرم رو submit کن
-        handleSubmit(new Event("submit") as any);
+        // با زدن Enter توی رمز، فرم ارسال می‌شه
+        const form = document.querySelector("form");
+        if (form) form.requestSubmit();
       } else setPassword((prev) => prev + key);
     }
   };
@@ -131,7 +128,7 @@ export function Login() {
           </button>
         </div>
 
-        {/* 👇 کیبورد مجازی */}
+        {/* کیبورد مجازی (فقط دسکتاپ) */}
         <VirtualKeyboard onKeyPress={handleVirtualKeyPress} />
       </Card>
     </div>
