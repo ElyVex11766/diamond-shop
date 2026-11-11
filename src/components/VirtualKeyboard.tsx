@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Props {
   onKeyPress: (key: string) => void;
@@ -44,7 +44,6 @@ export function VirtualKeyboard({ onKeyPress }: Props) {
     setTimeout(() => setActiveKey(null), 150);
   };
 
-  // افکت 3D برای فشردن دکمه (با انیمیشن CSS)
   return (
     <>
       {/* 👇 این بخش فقط روی دسکتاپ نمایش داده می‌شود */}
@@ -57,7 +56,6 @@ export function VirtualKeyboard({ onKeyPress }: Props) {
                   const displayKey = specialKeys[key] || key;
                   const isSpecial = ignoredKeys.includes(key) || key === "Space";
                   
-                  // تنظیم عرض دکمه‌ها (flex-grow)
                   let flexGrow = "flex-1";
                   if (key === "Space") flexGrow = "flex-[6.63]";
                   else if (key === "Backspace") flexGrow = "flex-[1.5]";
