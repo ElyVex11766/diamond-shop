@@ -19,42 +19,42 @@ export function Shop() {
   const { items, addItem, removeItem, updateQuantity } = useCart();
 
   const categories = [
-    { id: "network", title: "سرویس‌های شبکه / Network" },
-    { id: "accounts", title: "اکانت‌های ماینکرفت / Minecraft Accounts" },
-    { id: "capes", title: "کیپ‌های ماینکرفت / Minecraft Capes" },
-    { id: "donut", title: "سرور دونات / Donut SMP" },
-    { id: "discord", title: "دیسکورد / Discord" },
-    { id: "other", title: "سایر خدمات / Other Services" },
+    { id: "accounts", title: "اکانت‌های ماینکرفت", subtitle: "اکانت‌های فول اکسس و NFA" },
+    { id: "capes", title: "کیپ‌های ماینکرفت", subtitle: "کیپ‌های کمیاب و خاص" },
+    { id: "network", title: "سرویس‌های شبکه", subtitle: "کانفیگ‌های V2Ray و VPN" },
+    { id: "donut", title: "سرور دونات", subtitle: "پول و آیتم‌های Donut SMP" },
+    { id: "discord", title: "خدمات دیسکورد", subtitle: "ربات، سرور و بوست" },
+    { id: "other", title: "سایر خدمات", subtitle: "اسکین، فوتوشاپ و..." },
   ];
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8 py-16 relative">
       <SectionTitle title={t.shop.title} subtitle={t.shop.subtitle} />
 
-      <div className="space-y-12 pb-24">
+      <div className="space-y-16 pb-24">
         {categories.map((cat) => {
           const catProducts = allProducts.filter(p => p.category === cat.id);
           if (catProducts.length === 0) return null;
 
           return (
             <div key={cat.id}>
-              <h3 className="text-xl font-bold text-white mb-4 border-b border-diamond-border pb-2">
-                {cat.title}
-              </h3>
+              <div className="mb-6 border-b border-white/10 pb-4">
+                <h3 className="text-2xl font-bold text-white">{cat.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">{cat.subtitle}</p>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {catProducts.map((item) => {
                   const cartItem = items.find((i) => i.id === item.id);
                   
                   return (
                     <Card key={item.id} className="flex flex-col relative overflow-hidden group p-3">
-                      
                       {item.tag && (
-                        <div className="absolute top-0 right-0 bg-diamond-cyan text-diamond-bg text-[9px] font-bold px-2 py-1 rounded-bl-lg z-10 shadow-glow-sm">
+                        <div className="absolute top-0 right-0 bg-white text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg z-10">
                           {item.tag}
                         </div>
                       )}
 
-                      <div className="h-28 w-full flex items-center justify-center bg-[#0a0f1c] rounded-lg mb-3 overflow-hidden border border-white/5 group-hover:border-diamond-cyan/30 transition">
+                      <div className="h-28 w-full flex items-center justify-center bg-[#050505] rounded-lg mb-3 overflow-hidden border border-white/5 group-hover:border-white/20 transition">
                         <img 
                           src={item.image} 
                           alt={item.name}
@@ -74,26 +74,25 @@ export function Shop() {
                           <Button 
                             variant="secondary"
                             onClick={() => setSelectedCape(item)}
-                            className="w-full text-[11px] py-1.5 border-white/10 text-white hover:bg-white/5"
+                            className="w-full text-[11px] py-1.5"
                           >
                             {item.no3D ? "🖼️ مشاهده تصویر" : "👁️ مشاهده روی اسکین"}
                           </Button>
                         )}
 
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-diamond-cyan font-bold text-sm">
+                          <span className="text-white font-bold text-sm">
                             {formatPrice(item.price)}
                           </span>
                           
                           {cartItem ? (
-                            <div className="flex items-center gap-1.5 bg-diamond-bg rounded-xl p-1.5 border border-diamond-cyan/30 shadow-glow-sm">
+                            <div className="flex items-center gap-1.5 bg-white/5 rounded-xl p-1.5 border border-white/10">
                               <button 
                                 onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
-                                className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-red-500/30 rounded-lg transition-colors text-lg font-bold"
+                                className="w-7 h-7 flex items-center justify-center text-white bg-white/10 hover:bg-red-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 -
                               </button>
-                              
                               <input 
                                 type="number"
                                 min="1"
@@ -104,18 +103,17 @@ export function Shop() {
                                     updateQuantity(item.id, val);
                                   }
                                 }}
-                                className="w-10 h-7 text-center bg-diamond-panel border border-white/10 rounded-lg text-white text-sm font-bold focus:outline-none focus:border-diamond-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-10 h-7 text-center bg-transparent border-none text-white text-sm font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
-                              
                               <button 
                                 onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
-                                className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-emerald-500/30 rounded-lg transition-colors text-lg font-bold"
+                                className="w-7 h-7 flex items-center justify-center text-white bg-white/10 hover:bg-emerald-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 +
                               </button>
                               <button 
                                 onClick={() => removeItem(item.id)}
-                                className="w-7 h-7 flex items-center justify-center text-red-400 bg-diamond-panel hover:bg-red-500/20 rounded-lg transition-colors text-sm"
+                                className="w-7 h-7 flex items-center justify-center text-red-400 bg-white/10 hover:bg-red-500/20 rounded-lg transition-colors text-sm"
                               >
                                 ✕
                               </button>
@@ -129,7 +127,7 @@ export function Shop() {
                                 quantity: 1,
                                 image: item.image,
                               })}
-                              className="text-[11px] px-4 py-2 h-9 bg-emerald-600 hover:bg-emerald-500 text-white border-none font-bold rounded-xl shadow-glow-sm transition-all hover:scale-105"
+                              className="text-[11px] px-4 py-2 h-9 bg-white text-black hover:bg-gray-200 border-none font-bold rounded-xl transition-all hover:scale-105"
                             >
                               افزودن به سبد
                             </Button>
@@ -148,9 +146,9 @@ export function Shop() {
       {items.length > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-diamond-blue hover:bg-blue-500 shadow-[0_0_30px_rgba(47,129,247,0.5)] flex items-center justify-center transition-all hover:scale-110"
+          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all hover:scale-110"
         >
-          <img src="/images/ShoppingCard.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
             {items.reduce((sum, i) => sum + i.quantity, 0)}
           </span>
