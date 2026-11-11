@@ -150,7 +150,7 @@ export function Shop() {
           onClick={() => setIsCartOpen(true)}
           className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-diamond-blue hover:bg-blue-500 shadow-[0_0_30px_rgba(47,129,247,0.5)] flex items-center justify-center transition-all hover:scale-110"
         >
-          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <img src="/images/ShoppingCard.png" alt="Cart" className="w-8 h-8 object-contain" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
             {items.reduce((sum, i) => sum + i.quantity, 0)}
           </span>
