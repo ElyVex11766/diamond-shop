@@ -12,6 +12,36 @@ const formatPrice = (price: number) => {
   return price.toLocaleString('fa-IR') + " تومان";
 };
 
+// 👇 کامپوننت دکمه Orb
+const OrbButton = ({ 
+  variant, 
+  onClick, 
+  children, 
+  ariaLabel = ""
+}: { 
+  variant: "teal" | "silver" | "mauve" | "red"; 
+  onClick: () => void; 
+  children: React.ReactNode;
+  ariaLabel?: string;
+}) => {
+  const colorClass = {
+    teal: "btn-teal",
+    silver: "btn-silver",
+    mauve: "btn-mauve",
+    red: "btn-red",
+  }[variant];
+
+  return (
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`orb-btn ${colorClass}`}
+    >
+      {children}
+    </button>
+  );
+};
+
 export function Shop() {
   const { t, lang } = useLang();
   const [selectedCape, setSelectedCape] = useState<Product | null>(null);
@@ -86,54 +116,70 @@ export function Shop() {
                           </span>
                           
                           {cartItem ? (
-                            <div className="flex items-center gap-1.5 bg-diamond-bg rounded-xl p-1.5 border border-diamond-cyan/30 shadow-glow-sm">
-                              <button 
-                                onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
-                                className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-red-500/30 rounded-lg transition-colors text-lg font-bold"
+                            <div className="flex items-center gap-1.5">
+                              {/* 👇 دکمه کاهش تعداد (قرمز) */}
+                              <OrbButton 
+                                variant="red" 
+                                onClick={() => updateQuantity(item.id, cartItem.quantity - 1)} 
+                                ariaLabel="کاهش تعداد"
                               >
-                                -
-                              </button>
-                              
-                              {/* 👇 اینجا input گذاشتم */}
+                                <svg viewBox="0 0 24 24">
+                                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                              </OrbButton>
+
+                              {/* تعداد */}
                               <input 
                                 type="number"
                                 min="1"
                                 value={cartItem.quantity}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value);
-                                  if (!isNaN(val) && val > 0) {
-                                    updateQuantity(item.id, val);
-                                  }
+                                  if (!isNaN(val) && val > 0) updateQuantity(item.id, val);
                                 }}
-                                className="w-10 h-7 text-center bg-diamond-panel border border-white/10 rounded-lg text-white text-sm font-bold focus:outline-none focus:border-diamond-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-8 h-8 text-center bg-transparent border-none text-white text-sm font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
-                              
-                              <button 
-                                onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
-                                className="w-7 h-7 flex items-center justify-center text-white bg-diamond-panel hover:bg-emerald-500/30 rounded-lg transition-colors text-lg font-bold"
+
+                              {/* 👇 دکمه افزایش تعداد (فیروزه‌ای) */}
+                              <OrbButton 
+                                variant="teal" 
+                                onClick={() => updateQuantity(item.id, cartItem.quantity + 1)} 
+                                ariaLabel="افزایش تعداد"
                               >
-                                +
-                              </button>
-                              <button 
-                                onClick={() => removeItem(item.id)}
-                                className="w-7 h-7 flex items-center justify-center text-red-400 bg-diamond-panel hover:bg-red-500/20 rounded-lg transition-colors text-sm"
+                                <svg viewBox="0 0 24 24">
+                                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                              </OrbButton>
+
+                              {/* 👇 دکمه حذف (بنفش) */}
+                              <OrbButton 
+                                variant="mauve" 
+                                onClick={() => removeItem(item.id)} 
+                                ariaLabel="حذف از سبد"
                               >
-                                ✕
-                              </button>
+                                <svg viewBox="0 0 24 24">
+                                  <path d="M5 13 L10 17.5 L19 7"></path>
+                                </svg>
+                              </OrbButton>
                             </div>
                           ) : (
-                            <Button 
+                            /* 👇 دکمه افزودن به سبد (نقره‌ای) */
+                            <OrbButton 
+                              variant="silver" 
                               onClick={() => addItem({
                                 id: item.id,
                                 name: item.name,
                                 price: item.price,
                                 quantity: 1,
                                 image: item.image,
-                              })}
-                              className="text-[11px] px-4 py-2 h-9 bg-emerald-600 hover:bg-emerald-500 text-white border-none font-bold rounded-xl shadow-glow-sm transition-all hover:scale-105"
+                              })} 
+                              ariaLabel="افزودن به سبد"
                             >
-                              افزودن به سبد
-                            </Button>
+                              <svg viewBox="0 0 24 24">
+                                <path d="M7 17 L17 7 M17 7 L9 7 M17 7 L17 15"></path>
+                              </svg>
+                            </OrbButton>
                           )}
                         </div>
                       </div>
@@ -146,17 +192,20 @@ export function Shop() {
         })}
       </div>
 
-      {/* سبد خرید شناور */}
+      {/* 👇 سبد خرید شناور با استایل Orb */}
       {items.length > 0 && (
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-diamond-blue hover:bg-blue-500 shadow-[0_0_30px_rgba(47,129,247,0.5)] flex items-center justify-center transition-all hover:scale-110"
-        >
-          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-            {items.reduce((sum, i) => sum + i.quantity, 0)}
-          </span>
-        </button>
+        <div className="fixed bottom-8 right-8 z-50">
+          <OrbButton 
+            variant="teal" 
+            onClick={() => setIsCartOpen(true)} 
+            ariaLabel="باز کردن سبد خرید"
+          >
+            <img src="/images/cart-icon.png" alt="Cart" className="w-6 h-6 object-contain" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+              {items.reduce((sum, i) => sum + i.quantity, 0)}
+            </span>
+          </OrbButton>
+        </div>
       )}
 
       <CapeModal 
