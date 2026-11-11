@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { DiamondLogo } from "./DiamondLogo";
+import { ZyloxLogo } from "./ZyloxLogo";
 import { useLang } from "../i18n/LanguageContext";
 import { LinkButton } from "./Button";
 
@@ -47,15 +47,15 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-diamond-border/60 bg-diamond-bg/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050505]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
-        <NavLink to="/" aria-label="Diamond BOT home">
-          <DiamondLogo />
+        <NavLink to="/" aria-label="Zylox home">
+          <ZyloxLogo />
         </NavLink>
 
         <nav ref={navRef} className="hidden lg:flex items-center gap-1 relative" aria-label="Main navigation">
           <div
-            className="absolute bottom-0 h-8 bg-diamond-blue/20 rounded-md transition-all duration-300 ease-out pointer-events-none border-b-2 border-diamond-cyan"
+            className="absolute bottom-0 h-8 bg-white/10 rounded-md transition-all duration-300 ease-out pointer-events-none border-b-2 border-white"
             style={{ left: `${indicatorStyle.left}px`, width: `${indicatorStyle.width}px`, opacity: indicatorStyle.opacity }}
           />
 
@@ -65,7 +65,7 @@ export function Navbar() {
               to={l.to} 
               data-path={l.to}
               className={`relative z-10 px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
-                location.pathname === l.to ? "text-white" : "text-diamond-muted hover:text-white"
+                location.pathname === l.to ? "text-white" : "text-gray-400 hover:text-white"
               }`}
               end={l.to === "/"}
             >
@@ -77,17 +77,17 @@ export function Navbar() {
         <div className="hidden lg:flex items-center gap-3">
           <button
             onClick={() => setLang(lang === "en" ? "fa" : "en")}
-            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-diamond-muted hover:text-white hover:border-diamond-cyan/50 transition"
+            className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white hover:border-white/50 transition"
           >
             {lang === "en" ? "FA | فارسی" : "EN | English"}
           </button>
           
           {user ? (
-            <div className="flex items-center gap-3 bg-diamond-panel border border-diamond-border px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
               {user.discord_avatar ? (
-                <img src={user.discord_avatar} alt="Avatar" className="w-6 h-6 rounded-full border border-diamond-cyan" />
+                <img src={user.discord_avatar} alt="Avatar" className="w-6 h-6 rounded-full border border-white/30" />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-diamond-border flex items-center justify-center text-xs">👤</div>
+                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs">👤</div>
               )}
               <span className="text-sm font-bold text-white">{user.discord_username || user.username}</span>
               <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300">خروج</button>
@@ -103,12 +103,12 @@ export function Navbar() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-diamond-border/60 bg-diamond-bg/95 px-4 py-4 space-y-3">
+        <div className="lg:hidden border-t border-white/10 bg-[#050505]/95 px-4 py-4 space-y-3">
           {links.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
-              className={`block py-2 text-sm font-medium ${location.pathname === l.to ? "text-diamond-cyan" : "text-diamond-muted"}`}
+              className={`block py-2 text-sm font-medium ${location.pathname === l.to ? "text-white" : "text-gray-400"}`}
               onClick={() => setOpen(false)}
             >
               {l.label}
