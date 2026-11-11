@@ -32,7 +32,7 @@ export function Home() {
 
           <div className="relative flex justify-center z-10">
             {/* 👇 اینجا لوگوی خودت رو بذار (عکس رو توی پوشه public/images بذار) */}
-            <img src="/images/zylox-logo.png" alt="Zylox" className="w-64 h-64 object-contain animate-float-slow" />
+            <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox" className="w-64 h-64 object-contain animate-float-slow" />
           </div>
         </div>
       </section>
