@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 const sections = [
   { id: "top", label: "خانه" },
   { id: "products", label: "محصولات" },
-  { id: "stats", label: "آمار" },
+  { id: "why-us", label: "چرا ما" },
+  { id: "testimonials", label: "نظرات" },
   { id: "rules", label: "قوانین" },
 ];
 
@@ -35,22 +36,22 @@ export function Sidebar() {
   };
 
   return (
-    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-3">
+    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-6">
       {sections.map((section) => (
         <button
           key={section.id}
           onClick={() => scrollTo(section.id)}
-          className="group relative flex items-center"
+          className="group relative flex items-center justify-center"
           aria-label={section.label}
         >
           <div
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+            className={`transition-all duration-300 rounded-full ${
               activeSection === section.id
-                ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] scale-125"
-                : "bg-gray-600 hover:bg-gray-400"
+                ? "w-3 h-10 bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.8)]"
+                : "w-3 h-3 bg-gray-600 hover:bg-gray-400"
             }`}
           />
-          <span className="absolute left-6 text-sm text-white bg-[#0a0a0a] px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10">
+          <span className="absolute left-8 text-sm text-white bg-[#0a0a0a] px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10">
             {section.label}
           </span>
         </button>
