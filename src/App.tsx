@@ -12,7 +12,6 @@ import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 import { Bot } from "./pages/Bot";
 import { OrderPage } from "./pages/OrderPage";
-import { Checkout } from "./pages/Checkout";
 import { Admin } from "./pages/Admin";
 import { AdminUser } from "./pages/AdminUser";
 import { Challenge } from "./pages/Challenge";
@@ -33,7 +32,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/bot" element={<Bot />} />
               <Route path="/challenge" element={<Challenge />} />
-              <Route path="/checkout" element={<Checkout />} />
+              {/* <Route path="/checkout" element={<Checkout />} /> 👈 حذف شد */}
               <Route path="/order/:token" element={<OrderPage />} />
               <Route path="/this-is-safe" element={<Admin />} />
               <Route path="/this-is-safe/user/:id" element={<AdminUser />} />
