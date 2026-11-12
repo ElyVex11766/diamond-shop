@@ -47,7 +47,7 @@ export function Sidebar() {
           <div
             className={`transition-all duration-300 rounded-full ${
               activeSection === section.id
-                ? "w-3 h-10 bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.8)]"
+                ? "w-3 h-10 bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)]" // 👈 سفید شد
                 : "w-3 h-3 bg-gray-600 hover:bg-gray-400"
             }`}
           />
