@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { LinkButton } from "../components/Button";
 import { useLang } from "../i18n/LanguageContext";
 import { Sidebar } from "../components/Sidebar";
@@ -11,6 +13,17 @@ export function Home() {
   const { t } = useLang();
   const { items } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const location = useLocation();
+
+  // 👇 این کد باعث میشه وقتی آدرس #products بود، به اون بخش اسکرول بشه
+  useEffect(() => {
+    if (location.hash === "#products") {
+      const element = document.getElementById("products");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [location]);
 
   const categories = [
     { id: "accounts", title: "اکانت‌های ماینکرفت", subtitle: "اکانت‌های فول اکسس و NFA" },
@@ -39,7 +52,7 @@ export function Home() {
             </h1>
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
             <div className="flex flex-wrap gap-3">
-              <LinkButton to="#products">{t.hero.add}</LinkButton>
+              <LinkButton to="/#products">{t.hero.add}</LinkButton>
               <LinkButton to="/bot" variant="secondary">
                 {t.nav.bot}
               </LinkButton>
@@ -52,7 +65,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* بخش محصولات (همه دسته‌بندی‌ها با هم) */}
+      {/* بخش محصولات */}
       <div id="products" className="space-y-16 py-20">
         <div className="max-w-7xl mx-auto px-4 text-center mb-12">
           <h2 className="text-4xl font-bold text-white mb-2">فروشگاه Zylox</h2>
@@ -76,6 +89,28 @@ export function Home() {
           );
         })}
       </div>
+
+      {/* بقیه بخش‌ها (چرا ما، نظرات، قوانین) */}
+      <section id="why-us" className="py-20 bg-white/5">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">چرا Zylox؟</h2>
+          <p className="text-gray-400">به زودی...</p>
+        </div>
+      </section>
+
+      <section id="testimonials" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">نظرات کاربران</h2>
+          <p className="text-gray-400">به زودی...</p>
+        </div>
+      </section>
+
+      <section id="rules" className="py-20 bg-white/5">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">قوانین</h2>
+          <p className="text-gray-400">به زودی...</p>
+        </div>
+      </section>
 
       {/* دکمه شناور سبد خرید */}
       {items.length > 0 && (
