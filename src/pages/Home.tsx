@@ -64,7 +64,7 @@ export function Home() {
             <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl animate-pulse-glow" aria-hidden />
             <div className="relative animate-float-slow">
               <img 
-                src="/images/ZyloxLogo.png" 
+                src="/images/ZyloxLogoRemoveBG.png" 
                 alt="Zylox Logo" 
                 className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" 
               />
