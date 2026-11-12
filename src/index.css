@@ -27,10 +27,11 @@ body::before {
   font-family: "Vazirmatn", "Inter", system-ui, sans-serif;
 }
 
+/* 👇 اسکرول‌بار سفید */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: #222; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #444; }
+::-webkit-scrollbar-thumb { background: #ffffff; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #cccccc; }
 
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px); }
