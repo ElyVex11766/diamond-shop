@@ -98,7 +98,7 @@ export function Home() {
             <div className="absolute h-72 w-72 rounded-full bg-white/8 blur-3xl animate-pulse-glow" aria-hidden />
             <div className="relative animate-float-slow">
               <img
-                src="/images/ZyloxShopRemoveBG.png"
+                src="/images/ZyloxLogoRemoveBG.png"
                 alt="Zylox Shop"
                 className="w-72 h-72 md:w-96 md:h-96 object-contain drop-shadow-[0_0_40px_rgba(255,255,255,0.2)]"
                 onError={(e) => {
