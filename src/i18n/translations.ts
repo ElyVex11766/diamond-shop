@@ -1,290 +1,174 @@
-export type Lang = "en" | "fa";
+export type Lang = "fa" | "en";
 
-export const translations = {
-  en: {
-    nav: {
-      home: "Home",
-      features: "Features",
-      docs: "Documentation",
-      shop: "Shop",
-      dashboard: "Dashboard",
-      status: "Status",
-      bot: "Discord Bot",
-      login: "Login",
-      language: "Language",
-    },
-      hero: {
-      title: "Welcome to Zylox Shop", // 👈 تغییر کرد
-      subtitle: "Premium Minecraft & Discord services. Fast, secure, and reliable.",
-      add: "Go to Shop",
-      explore: "Explore Features",
-    },
-    features: {
-      title: "Everything you need",
-      subtitle: "A complete toolkit to run a safe, fun, and active community.",
-      giveaway: "Giveaway Management",
-      giveawayDesc: "Run automated giveaways with roles, timers, and winners.",
-      moderation: "Moderation Tools",
-      moderationDesc: "Warn, mute, kick, and ban with clear audit trails.",
-      antilink: "Anti-Link Protection",
-      antilinkDesc: "Block spam and malicious links automatically.",
-      security: "Security Alerts",
-      securityDesc: "Get real-time alerts for raids and suspicious activity.",
-      polls: "Suggestions and Polls",
-      pollsDesc: "Collect community feedback with clean poll interfaces.",
-      auto: "Automated Messages",
-      autoDesc: "Schedule announcements and welcome messages.",
-      server: "Server Management",
-      serverDesc: "Configure roles, channels, and permissions easily.",
-    },
-    botPage: {
-      title: "Diamond BOT",
-      subtitle: "The ultimate Discord bot for your server.",
-      invite: "Invite Bot",
-      status: "Bot Status",
-      online: "Online",
-      whyTitle: "Why Choose Diamond BOT?",
-      whyDesc: "Diamond BOT is designed to make your Discord server management easier, safer, and more fun. With powerful moderation tools, anti-link protection, and automated messages, you can focus on building your community while we handle the rest."
-    },
-    stats: {
-      title: "Community at a glance",
-      members: "Total Discord Members",
-      online: "Online Members",
-      servers: "Active Servers",
-      status: "Bot Status",
-      placeholder: "Live stats connected to Discord",
-      onlineStatus: "Online",
-    },
-    cta: {
-      title: "Ready to upgrade your server?",
-      subtitle: "Add Diamond BOT in under a minute — no config required to start.",
-      button: "Add to Discord",
-    },
-    footer: {
-      tagline: "Premium Discord bot platform.",
-      product: "Product",
-      resources: "Resources",
-      legal: "Legal",
-      tos: "Terms of Service",
-      privacy: "Privacy Policy",
-      support: "Support",
-      rights: "All rights reserved.",
-    },
-    featuresPage: {
-      title: "Features",
-      subtitle: "A deeper look at what Diamond BOT can do for your server.",
-    },
-    docs: {
-      title: "Documentation",
-      subtitle: "Guides and references to get the most out of Diamond BOT.",
-      gettingStarted: "Getting Started",
-      gettingStartedDesc: "Add the bot and run your first setup command.",
-      commands: "Commands Reference",
-      commandsDesc: "Full command list with examples and permissions.",
-      permissions: "Permissions Guide",
-      permissionsDesc: "Recommended permission models for your server.",
-      placeholder: "Documentation content will be expanded soon.",
-    },
-    shop: {
-      title: "Shop",
-      subtitle: "Premium Minecraft & Discord services. Instant or fast delivery.",
-      price: "Price",
-      details: "Buy Now",
-      placeholderPrice: "$—",
-      paymentNote: "Pay via Card and wait for ticket creation.",
-    },
-    dashboard: {
-      title: "Dashboard",
-      subtitle: "Your account and Discord connection.",
-      notice: "You are logged in.",
-      profile: "Website Profile",
-      profilePlaceholder: "Not signed in",
-      servers: "Your Servers",
-      noServers: "Connect your Discord to see servers.",
-      botStatus: "Bot Status",
-      settings: "Server Settings",
-      settingsPlaceholder: "Select a server to edit settings.",
-      sidebar: {
-        overview: "Overview",
-        servers: "Servers",
-        settings: "Settings",
-        billing: "Billing",
-        support: "Support",
-      },
-    },
-    status: {
-      title: "Status",
-      subtitle: "Overview of all services and Discord.",
-      totalMembers: "Total Discord Members",
-      onlineMembers: "Online Members",
-      activeServers: "Active Servers",
-      botStatus: "Bot Status",
-      botOnline: "Online",
-      botOffline: "Offline",
-      operational: "Operational",
-      connected: "Connected",
-      botApi: "Bot API",
-      database: "Database",
-      dashboard: "Dashboard",
-      loadStats: "Loading stats...",
-      statsError: "Error loading stats",
-    },
-    login: {
-      title: "Login / Register",
-      subtitle: "Enter your username and password.",
-      button: "Login",
-      disabledNote: "Please enter your credentials.",
-    },
-    common: {
-      loading: "Loading...",
-      error: "Something went wrong.",
-      retry: "Retry",
-      back: "Back",
-      soon: "Coming soon",
-    },
+export interface Dict {
+  nav: {
+    home: string;
+    features: string;
+    docs: string;
+    shop: string;
+    bot: string;
+    dashboard: string;
+    status: string;
+    login: string;
+  };
+  hero: {
+    subtitle: string;
+    add: string;
+  };
+  stats: {
+    placeholder: string;
+  };
+  shop: {
+    title: string;
+    subtitle: string;
+  };
+  features: {
+    title: string;
+    subtitle: string;
+    giveaway: string;
+    giveawayDesc: string;
+    moderation: string;
+    moderationDesc: string;
+    antilink: string;
+    antilinkDesc: string;
+    security: string;
+    securityDesc: string;
+    polls: string;
+    pollsDesc: string;
+    auto: string;
+    autoDesc: string;
+    server: string;
+    serverDesc: string;
+  };
+  botPage: {
+    invite: string;
+    status: string;
+    online: string;
+  };
+  footer: {
+    tagline: string;
+    product: string;
+    resources: string;
+    legal: string;
+    support: string;
+    tos: string;
+    privacy: string;
+    rights: string;
+  };
+}
+
+const fa: Dict = {
+  nav: {
+    home: "خانه",
+    features: "امکانات",
+    docs: "مستندات",
+    shop: "فروشگاه",
+    bot: "ربات",
+    dashboard: "داشبورد",
+    status: "وضعیت",
+    login: "ورود",
   },
-  fa: {
-    nav: {
-      home: "خانه",
-      features: "امکانات",
-      docs: "مستندات",
-      shop: "فروشگاه",
-      dashboard: "داشبورد",
-      status: "وضعیت",
-      bot: "ربات دیسکورد",
-      login: "ورود",
-      language: "زبان",
-    },
-      hero: {
-      title: "به Zylox Shop خوش آمدید", // 👈 تغییر کرد
-      subtitle: "خرید آسان و امن خدمات ماینکرفت و دیسکورد. با بهترین قیمت و کیفیت.",
-      add: "ورود به فروشگاه",
-      explore: "مشاهده امکانات",
-    },
-    features: {
-      title: "همه‌چیز که لازم داری",
-      subtitle: "یک جعبه‌ابزار کامل برای یک جامعه امن، سرگرم‌کننده و فعال.",
-      giveaway: "مدیریت قرعه‌کشی",
-      giveawayDesc: "قرعه‌کشی خودکار با نقش‌ها، تایمر و برندگان.",
-      moderation: "ابزارهای مدیریت",
-      moderationDesc: "اخطار، میوت، کیک و بن با گزارش کامل.",
-      antilink: "محافظت ضد لینک",
-      antilinkDesc: "بلاک خودکار اسپم و لینک‌های مخرب.",
-      security: "هشدارهای امنیتی",
-      securityDesc: "هشدار لحظه‌ای برای ریید و فعالیت مشکوک.",
-      polls: "نظرسنجی و پیشنهاد",
-      pollsDesc: "جمع‌آوری بازخورد جامعه با رابط نظرسنجی تمیز.",
-      auto: "پیام‌های خودکار",
-      autoDesc: "زمان‌بندی اعلان‌ها و پیام‌های خوش‌آمدگویی.",
-      server: "مدیریت سرور",
-      serverDesc: "تنظیم نقش‌ها، کانال‌ها و دسترسی‌ها به‌سادگی.",
-    },
-    botPage: {
-      title: "ربات Diamond BOT",
-      subtitle: "بهترین ربات برای سرور دیسکورد شما.",
-      invite: "دعوت از ربات",
-      status: "وضعیت ربات",
-      online: "آنلاین",
-      whyTitle: "چرا Diamond BOT رو انتخاب کنیم؟",
-      whyDesc: "ربات Diamond BOT طوری طراحی شده تا مدیریت سرور دیسکورد شما را آسان‌تر، امن‌تر و سرگرم‌کننده‌تر کند. با ابزارهای قدرتمند مدیریت، محافظت ضد لینک و پیام‌های خودکار، می‌توانید روی رشد جامعه خود تمرکز کنید و بقیه کارها را به ما بسپارید."
-    },
-    stats: {
-      title: "جامعه در یک نگاه",
-      members: "کل اعضای دیسکورد",
-      online: "اعضای آنلاین",
-      servers: "سرورهای فعال",
-      status: "وضعیت ربات",
-      placeholder: "آمار زنده متصل به دیسکورد",
-      onlineStatus: "فعال",
-    },
-    cta: {
-      title: "آماده ارتقای سرورت هستی؟",
-      subtitle: "در کمتر از یک دقیقه Diamond BOT رو اضافه کن — بدون نیاز به تنظیمات اولیه.",
-      button: "افزودن به دیسکورد",
-    },
-    footer: {
-      tagline: "پلتفرم پریمیوم ربات دیسکورد.",
-      product: "محصول",
-      resources: "منابع",
-      legal: "قانونی",
-      tos: "شرایط استفاده",
-      privacy: "سیاست حفظ حریم خصوصی",
-      support: "پشتیبانی",
-      rights: "تمامی حقوق محفوظ است.",
-    },
-    featuresPage: {
-      title: "امکانات",
-      subtitle: "نگاهی عمیق‌تر به کارهایی که Diamond BOT برای سرورت انجام می‌دهد.",
-    },
-    docs: {
-      title: "مستندات",
-      subtitle: "راهنماها و مراجع برای استفاده حداکثری از Diamond BOT.",
-      gettingStarted: "شروع کار",
-      gettingStartedDesc: "ربات را اضافه کن و اولین دستور تنظیمات را اجرا کن.",
-      commands: "مرجع دستورات",
-      commandsDesc: "لیست کامل دستورات با مثال و دسترسی‌ها.",
-      permissions: "راهنمای دسترسی‌ها",
-      permissionsDesc: "مدل‌های پیشنهادی دسترسی برای سرور شما.",
-      placeholder: "محتوای مستندات به‌زودی گسترش می‌یابد.",
-    },
-    shop: {
-      title: "فروشگاه",
-      subtitle: "خدمات پریمیوم ماینکرفت و دیسکورد. تحویل فوری یا سریع.",
-      price: "قیمت",
-      details: "خرید",
-      placeholderPrice: "— $",
-      paymentNote: "پرداخت از طریق کارت و منتظر بمانید تا تیکت ساخته شود.",
-    },
-    dashboard: {
-      title: "داشبورد",
-      subtitle: "حساب کاربری و اتصال دیسکورد شما.",
-      notice: "شما وارد شده‌اید.",
-      profile: "پروفایل سایت",
-      profilePlaceholder: "وارد نشده‌اید",
-      servers: "سرورهای شما",
-      noServers: "برای دیدن سرورها، دیسکورد خود را متصل کنید.",
-      botStatus: "وضعیت ربات",
-      settings: "تنظیمات سرور",
-      settingsPlaceholder: "برای ویرایش تنظیمات، یک سرور انتخاب کنید.",
-      sidebar: {
-        overview: "نمای کلی",
-        servers: "سرورها",
-        settings: "تنظیمات",
-        billing: "صورتحساب",
-        support: "پشتیبانی",
-      },
-    },
-    status: {
-      title: "وضعیت",
-      subtitle: "نمای کلی وضعیت سرویس‌ها و دیسکورد.",
-      totalMembers: "کل اعضای دیسکورد",
-      onlineMembers: "اعضای آنلاین",
-      activeServers: "سرورهای فعال",
-      botStatus: "وضعیت ربات",
-      botOnline: "آنلاین",
-      botOffline: "آفلاین",
-      operational: "فعال",
-      connected: "متصل",
-      botApi: "API ربات",
-      database: "پایگاه داده",
-      dashboard: "داشبورد",
-      loadStats: "در حال دریافت آمار...",
-      statsError: "خطا در دریافت آمار",
-    },
-    login: {
-      title: "ورود / ثبت‌نام",
-      subtitle: "نام کاربری و رمز عبور خود را وارد کنید.",
-      button: "ورود",
-      disabledNote: "لطفاً اطلاعات خود را وارد کنید.",
-    },
-    common: {
-      loading: "در حال بارگذاری...",
-      error: "مشکلی پیش آمد.",
-      retry: "تلاش دوباره",
-      back: "بازگشت",
-      soon: "به‌زودی",
-    },
+  hero: {
+    subtitle: "فروشگاه پریمیوم اکانت، کیپ، سرویس‌های شبکه و دیسکورد — تحویل سریع و خودکار.",
+    add: "مشاهده محصولات",
+  },
+  stats: {
+    placeholder: "تحویل خودکار • پشتیبانی ۲۴/۷",
+  },
+  shop: {
+    title: "فروشگاه Zylox",
+    subtitle: "محصولات پریمیوم برای گیمینگ و دیسکورد",
+  },
+  features: {
+    title: "امکانات ربات",
+    subtitle: "همه چیزی که سرور دیسکورد شما نیاز دارد",
+    giveaway: "گیواوی",
+    giveawayDesc: "برگزاری قرعه‌کشی خودکار و جذاب",
+    moderation: "مدیریت",
+    moderationDesc: "ابزارهای قدرتمند برای مدیریت سرور",
+    antilink: "آنتی‌لینک",
+    antilinkDesc: "جلوگیری از ارسال لینک‌های ناخواسته",
+    security: "امنیت",
+    securityDesc: "محافظت از سرور در برابر حملات",
+    polls: "نظرسنجی",
+    pollsDesc: "ساخت نظرسنجی پیشرفته",
+    auto: "خودکارسازی",
+    autoDesc: "پاسخ خودکار و مدیریت نقش‌ها",
+    server: "تنظیمات سرور",
+    serverDesc: "کنترل کامل کانال‌ها و نقش‌ها",
+  },
+  botPage: {
+    invite: "دعوت ربات",
+    status: "وضعیت ربات",
+    online: "آنلاین",
+  },
+  footer: {
+    tagline: "فروشگاه پریمیوم گیمینگ و دیسکورد با تحویل خودکار.",
+    product: "محصولات",
+    resources: "منابع",
+    legal: "قوانین",
+    support: "پشتیبانی",
+    tos: "شرایط استفاده",
+    privacy: "حریم خصوصی",
+    rights: "تمام حقوق محفوظ است.",
   },
 };
 
-export type Dict = typeof translations.en;
+const en: Dict = {
+  nav: {
+    home: "Home",
+    features: "Features",
+    docs: "Docs",
+    shop: "Shop",
+    bot: "Bot",
+    dashboard: "Dashboard",
+    status: "Status",
+    login: "Login",
+  },
+  hero: {
+    subtitle: "Premium shop for accounts, capes, network services and Discord — fast automated delivery.",
+    add: "View Products",
+  },
+  stats: {
+    placeholder: "Auto delivery • 24/7 Support",
+  },
+  shop: {
+    title: "Zylox Shop",
+    subtitle: "Premium products for gaming and Discord",
+  },
+  features: {
+    title: "Bot Features",
+    subtitle: "Everything your Discord server needs",
+    giveaway: "Giveaways",
+    giveawayDesc: "Run automated and engaging giveaways",
+    moderation: "Moderation",
+    moderationDesc: "Powerful tools for server management",
+    antilink: "Anti-Link",
+    antilinkDesc: "Prevent unwanted link sharing",
+    security: "Security",
+    securityDesc: "Protect your server from attacks",
+    polls: "Polls",
+    pollsDesc: "Create advanced polls",
+    auto: "Automation",
+    autoDesc: "Auto replies and role management",
+    server: "Server Settings",
+    serverDesc: "Full control over channels and roles",
+  },
+  botPage: {
+    invite: "Invite Bot",
+    status: "Bot Status",
+    online: "Online",
+  },
+  footer: {
+    tagline: "Premium gaming and Discord shop with automated delivery.",
+    product: "Products",
+    resources: "Resources",
+    legal: "Legal",
+    support: "Support",
+    tos: "Terms of Service",
+    privacy: "Privacy Policy",
+    rights: "All rights reserved.",
+  },
+};
+
+export const translations: Record<Lang, Dict> = { fa, en };
