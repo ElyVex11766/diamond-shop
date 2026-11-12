@@ -38,40 +38,43 @@ export function Shop() {
 
           return (
             <div key={cat.id}>
-              <div className="mb-6 border-b border-white/10 pb-4">
-                <h3 className="text-2xl font-bold text-white">{cat.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">{cat.subtitle}</p>
+              <div className="mb-6 border-b border-white/8 pb-4 flex justify-between items-end">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">{cat.title}</h3>
+                  <p className="text-sm text-gray-500 mt-1">{cat.subtitle}</p>
+                </div>
+                <span className="text-xs text-gray-600">{catProducts.length} محصول</span>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {catProducts.map((item) => {
                   const cartItem = items.find((i) => i.id === item.id);
-                  
+
                   return (
                     <Card key={item.id} className="flex flex-col relative overflow-hidden group p-3">
                       {item.tag && (
-                        <div className="absolute top-0 right-0 bg-white text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg z-10">
+                        <div className="absolute top-0 right-0 bg-white text-black text-[9px] font-bold px-2.5 py-1 rounded-bl-lg z-10">
                           {item.tag}
                         </div>
                       )}
 
-                      <div className="h-28 w-full flex items-center justify-center bg-[#050505] rounded-lg mb-3 overflow-hidden border border-white/5 group-hover:border-white/20 transition">
-                        <img 
-                          src={item.image} 
+                      <div className="h-28 w-full flex items-center justify-center bg-[#050505] rounded-xl mb-3 overflow-hidden border border-white/5 group-hover:border-white/20 transition">
+                        <img
+                          src={item.image}
                           alt={item.name}
-                          className="w-full h-full object-contain p-1 group-hover:scale-110 transition duration-300"
+                          className="w-full h-full object-contain p-1 group-hover:scale-110 transition duration-500"
                           onError={(e) => {
                             e.currentTarget.src = "https://api.dicebear.com/7.x/identicon/svg?seed=" + item.id;
                           }}
                         />
                       </div>
-                      
+
                       <h4 className="text-xs font-semibold text-white flex-1">
                         {lang === "fa" ? item.name : item.nameEn}
                       </h4>
-                      
+
                       <div className="mt-3 flex flex-col gap-2">
                         {item.category === "capes" && (
-                          <Button 
+                          <Button
                             variant="secondary"
                             onClick={() => setSelectedCape(item)}
                             className="w-full text-[11px] py-1.5"
@@ -84,34 +87,34 @@ export function Shop() {
                           <span className="text-white font-bold text-sm">
                             {formatPrice(item.price)}
                           </span>
-                          
+
                           {cartItem ? (
                             <div className="flex items-center gap-1.5 bg-white/5 rounded-xl p-1.5 border border-white/10">
-                              <button 
+                              <button
                                 onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
                                 className="w-7 h-7 flex items-center justify-center text-white bg-white/10 hover:bg-red-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 -
                               </button>
-                              <input 
-                                type="number"
-                                min="1"
-                                value={cartItem.quantity}
-                                onChange={(e) => {
-                                  const val = parseInt(e.target.value);
-                                  if (!isNaN(val) && val > 0) {
-                                    updateQuantity(item.id, val);
-                                  }
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                defaultValue={cartItem.quantity}
+                                key={`${item.id}-${cartItem.quantity}`}
+                                onBlur={(e) => {
+                                  const val = Number.parseInt(e.currentTarget.value, 10);
+                                  if (Number.isFinite(val) && val > 0) updateQuantity(item.id, val);
+                                  else e.currentTarget.value = String(cartItem.quantity);
                                 }}
                                 className="w-10 h-7 text-center bg-transparent border-none text-white text-sm font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
-                              <button 
+                              <button
                                 onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
                                 className="w-7 h-7 flex items-center justify-center text-white bg-white/10 hover:bg-emerald-500/30 rounded-lg transition-colors text-lg font-bold"
                               >
                                 +
                               </button>
-                              <button 
+                              <button
                                 onClick={() => removeItem(item.id)}
                                 className="w-7 h-7 flex items-center justify-center text-red-400 bg-white/10 hover:bg-red-500/20 rounded-lg transition-colors text-sm"
                               >
@@ -119,7 +122,7 @@ export function Shop() {
                               </button>
                             </div>
                           ) : (
-                            <Button 
+                            <Button
                               onClick={() => addItem({
                                 id: item.id,
                                 name: item.name,
@@ -146,24 +149,24 @@ export function Shop() {
       {items.length > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all hover:scale-110"
+          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.25)] flex items-center justify-center transition-all hover:scale-110 active:scale-95"
         >
-          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <img src="/images/ShoppingCard.png" alt="سبد خرید" className="h-8 w-8 object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
             {items.reduce((sum, i) => sum + i.quantity, 0)}
           </span>
         </button>
       )}
 
-      <CapeModal 
-        isOpen={!!selectedCape} 
+      <CapeModal
+        isOpen={!!selectedCape}
         onClose={() => setSelectedCape(null)}
         selectedCape={selectedCape}
       />
 
-      <CartSidebar 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
+      <CartSidebar
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
       />
     </div>
   );
