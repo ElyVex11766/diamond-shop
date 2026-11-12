@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { LinkButton } from "../components/Button";
 import { useLang } from "../i18n/LanguageContext";
@@ -7,7 +7,7 @@ import { ProductList } from "../components/ProductList";
 import { allProducts } from "./products";
 import { CartSidebar } from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
-import { useState } from "react";
+import { ZyloxLogo } from "../components/ZyloxLogo"; // 👈 ایمپورت لوگو
 
 export function Home() {
   const { t } = useLang();
@@ -15,10 +15,11 @@ export function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const location = useLocation();
 
-  // 👇 این کد باعث میشه وقتی آدرس #products بود، به اون بخش اسکرول بشه
+  // 👇 اسکرول خودکار به بخش‌ها (مثلاً #products)
   useEffect(() => {
-    if (location.hash === "#products") {
-      const element = document.getElementById("products");
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      const element = document.getElementById(id);
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
       }
@@ -38,7 +39,7 @@ export function Home() {
     <>
       <Sidebar />
       
-      {/* Hero */}
+      {/* Hero - بخش خانه */}
       <section id="top" className="relative overflow-hidden min-h-screen flex items-center">
         <div className="absolute inset-0 bg-radial-glow pointer-events-none" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-20 md:py-32 grid gap-12 md:grid-cols-2 items-center w-full">
@@ -59,13 +60,17 @@ export function Home() {
             </div>
           </div>
 
+          {/* 👇 لوگوی Zylox وسط صفحه */}
           <div className="relative flex justify-center z-10">
-            <img src="/images/zylox-logo.png" alt="Zylox" className="w-64 h-64 object-contain animate-float-slow" />
+            <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl animate-pulse-glow" aria-hidden />
+            <div className="relative animate-float-slow">
+              <ZyloxLogo size={220} withText={false} />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* بخش محصولات */}
+      {/* بخش محصولات (فروشگاه) */}
       <div id="products" className="space-y-16 py-20">
         <div className="max-w-7xl mx-auto px-4 text-center mb-12">
           <h2 className="text-4xl font-bold text-white mb-2">فروشگاه Zylox</h2>
@@ -90,7 +95,7 @@ export function Home() {
         })}
       </div>
 
-      {/* بقیه بخش‌ها (چرا ما، نظرات، قوانین) */}
+      {/* بخش چرا ما */}
       <section id="why-us" className="py-20 bg-white/5">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">چرا Zylox؟</h2>
@@ -98,6 +103,7 @@ export function Home() {
         </div>
       </section>
 
+      {/* بخش نظرات */}
       <section id="testimonials" className="py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">نظرات کاربران</h2>
@@ -105,6 +111,7 @@ export function Home() {
         </div>
       </section>
 
+      {/* بخش قوانین */}
       <section id="rules" className="py-20 bg-white/5">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">قوانین</h2>
