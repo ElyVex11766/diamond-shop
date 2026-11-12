@@ -1,139 +1,106 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card } from "../components/Card";
-import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
-import { useLang } from "../i18n/LanguageContext";
+
+interface User {
+  id: string;
+  username: string;
+  phone?: string;
+  email?: string;
+  discord_id?: string;
+  discord_username?: string;
+  discord_avatar?: string;
+}
 
 export function Dashboard() {
-  const { t } = useLang();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [user, setUser] = useState<any>(null);
-
-  const sidebar = [
-    t.dashboard.sidebar.overview,
-    t.dashboard.sidebar.servers,
-    t.dashboard.sidebar.settings,
-    t.dashboard.sidebar.billing,
-    t.dashboard.sidebar.support,
-  ];
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    const saved = localStorage.getItem("diamond_user");
+    if (saved) setUser(JSON.parse(saved));
+
+    const searchParams = new URLSearchParams(window.location.search);
     const discordId = searchParams.get("discord_id");
-    const discordUsername = searchParams.get("discord_username");
-    const discordAvatar = searchParams.get("discord_avatar");
-
-    const savedUserStr = localStorage.getItem("diamond_user");
-    if (!savedUserStr) {
-      navigate("/login");
-      return;
+    if (discordId && saved) {
+      const currentUser = JSON.parse(saved) as User;
+      const updatedUser: User = {
+        ...currentUser,
+        discord_id: discordId,
+        discord_username: searchParams.get("discord_username") || currentUser.discord_username,
+        discord_avatar: searchParams.get("discord_avatar") || currentUser.discord_avatar,
+        email: searchParams.get("email") || currentUser.email,
+      };
+      localStorage.setItem("diamond_user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
     }
+  }, []);
 
-    const savedUser = JSON.parse(savedUserStr);
+  if (!user) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-gray-500">برای مشاهده حساب شخصی خود وارد شوید.</p>
+        <Link to="/login"><Button>ورود به حساب</Button></Link>
+      </div>
+    );
+  }
 
-    if (discordId && discordUsername) {
-      savedUser.discord_id = discordId;
-      savedUser.discord_username = discordUsername;
-      savedUser.discord_avatar = discordAvatar;
-      localStorage.setItem("diamond_user", JSON.stringify(savedUser));
-      navigate("/dashboard", { replace: true });
-    }
-
-    setUser(savedUser);
-  }, [navigate, searchParams]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("diamond_user");
-    navigate("/login");
-  };
-
-  if (!user) return null;
+  const displayName = user.discord_username || user.username;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-8 py-16">
-      <div className="flex justify-between items-center mb-8">
-        <SectionTitle title={`سلام، ${user.username}`} subtitle="به داشبورد خوش آمدید" />
-        <Button onClick={handleLogout} variant="secondary">خروج</Button>
+    <div className="mx-auto max-w-6xl px-4 md:px-8 py-12 md:py-16">
+      <div className="mb-10 flex flex-col gap-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:flex-row md:items-center md:justify-between md:p-8">
+        <div className="flex items-center gap-4">
+          <div className="h-20 w-20 overflow-hidden rounded-3xl border border-white/15 bg-white/5 flex items-center justify-center">
+            {user.discord_avatar ? (
+              <img src={user.discord_avatar} alt={`تصویر ${displayName}`} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-3xl">👤</span>
+            )}
+          </div>
+          <div>
+            <p className="mb-1 text-sm text-gray-500">حساب کاربری Zylox</p>
+            <h1 className="text-2xl md:text-3xl font-black text-white">سلام، {displayName}</h1>
+            <p className="mt-1 text-sm text-gray-500">اطلاعات حساب و سرویس‌های شما</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm text-emerald-300">
+          حساب شما فعال است
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <aside className="rounded-2xl border border-diamond-border bg-diamond-panel/60 p-3 h-fit">
-          <ul className="space-y-1">
-            {sidebar.map((s, i) => (
-              <li key={s}>
-                <button
-                  className={`w-full text-start rounded-lg px-3 py-2 text-sm ${
-                    i === 0
-                      ? "bg-diamond-blue/20 text-white"
-                      : "text-diamond-muted hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  {s}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
-
-        <div className="grid gap-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.profile}</h3>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-diamond-border flex items-center justify-center text-xl">
-                  👤
-                </div>
-                <div>
-                  <p className="text-white font-bold">{user.username}</p>
-                  <p className="text-xs text-diamond-muted mt-1">ID: {user.id}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <h3 className="text-sm font-semibold text-diamond-muted mb-3">اتصال دیسکورد</h3>
-              {user.discord_username ? (
-                <div className="flex items-center gap-3">
-                  {user.discord_avatar && (
-                    <img src={user.discord_avatar} alt="Discord Avatar" className="w-10 h-10 rounded-full border border-diamond-cyan" />
-                  )}
-                  <div>
-                    <p className="text-white font-bold">{user.discord_username}</p>
-                    <p className="text-xs text-diamond-muted">ID: {user.discord_id}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <p className="text-sm text-diamond-muted mb-3">هنوز دیسکورد متصل نیست.</p>
-                  <Button onClick={() => window.location.href = `/api/auth/discord?user_id=${user.id}`} className="w-full">
-                    اتصال به دیسکورد
-                  </Button>
-                </div>
-              )}
-            </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <h2 className="mb-4 text-base font-bold text-white">پروفایل شما</h2>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between gap-4"><span className="text-gray-500">نام کاربری</span><span className="text-white">{user.username}</span></div>
+            <div className="flex justify-between gap-4"><span className="text-gray-500">شماره موبایل</span><span className="text-white">{user.phone || "ثبت نشده"}</span></div>
+            <div className="flex justify-between gap-4"><span className="text-gray-500">ایمیل</span><span className="text-white">{user.email || "ثبت نشده"}</span></div>
           </div>
+        </Card>
 
-          {/* سرورها */}
-          <Card>
-            <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.servers}</h3>
-            <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-diamond-muted">
-              {user.discord_username 
-                ? "در حال دریافت اطلاعات سرورها از دیسکورد..." 
-                : "برای مشاهده سرورها، ابتدا دیسکورد خود را متصل کنید."}
-            </div>
-          </Card>
+        <Card>
+          <h2 className="mb-4 text-base font-bold text-white">اتصال دیسکورد</h2>
+          {user.discord_id ? (
+            <>
+              <p className="text-sm text-gray-400">متصل به {user.discord_username || "حساب دیسکورد"}</p>
+              <p className="mt-3 text-sm text-emerald-400">✓ اتصال با موفقیت انجام شده</p>
+            </>
+          ) : (
+            <>
+              <p className="mb-4 text-sm text-gray-500">برای تحویل خودکار سفارش‌ها، دیسکورد خود را متصل کنید.</p>
+              <a href={`/api/auth/discord?user_id=${encodeURIComponent(user.id)}`} className="text-sm text-white border-b border-white/30 hover:border-white pb-1">
+                اتصال دیسکورد ←
+              </a>
+            </>
+          )}
+        </Card>
 
-          {/* تنظیمات */}
-          <Card>
-            <h3 className="text-sm font-semibold text-diamond-muted mb-3">{t.dashboard.settings}</h3>
-            <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-diamond-muted">
-              {user.discord_username 
-                ? "تنظیمات سرور پس از انتخاب سرور نمایش داده می‌شود." 
-                : "برای تنظیمات، ابتدا دیسکورد خود را متصل کنید."}
-            </div>
-          </Card>
-        </div>
+        <Card>
+          <h2 className="mb-4 text-base font-bold text-white">سفارش‌های شما</h2>
+          <p className="text-sm leading-7 text-gray-500">سفارش‌های ثبت‌شده و لینک‌های تحویل شما در این قسمت نمایش داده می‌شوند.</p>
+          <Link to="/#products" className="mt-4 inline-block text-sm text-white border-b border-white/30 hover:border-white pb-1">مشاهده محصولات ←</Link>
+        </Card>
       </div>
     </div>
   );
