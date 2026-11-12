@@ -14,14 +14,14 @@ interface Props {
 }
 
 export function ProductList({ products }: Props) {
-  const { addItem, removeItem, updateQuantity } = useCart();
+  const { items, addItem, removeItem, updateQuantity } = useCart();
   const [selectedCape, setSelectedCape] = useState<Product | null>(null);
 
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {products.map((item) => {
-          const cartItem = products.find((i) => i.id === item.id);
+          const cartItem = items.find((i) => i.id === item.id);
           
           return (
             <Card key={item.id} className="flex flex-col relative overflow-hidden group p-3">
