@@ -22,7 +22,7 @@ export function Navbar() {
   const links = [
     { to: "/", label: t.nav.home },
     { to: "/docs", label: t.nav.docs },
-    { to: "/#products", label: t.nav.shop }, // 👈 تغییر کرد
+    { to: "/#products", label: t.nav.shop }, // 👈 به صفحه اصلی و بخش محصولات
     { to: "/bot", label: t.nav.bot },
     { to: "/challenge", label: "چالش" },
     { to: "/dashboard", label: t.nav.dashboard },
