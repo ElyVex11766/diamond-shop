@@ -45,7 +45,7 @@ export function Home() {
               {t.stats.placeholder}
             </span>
             
-            {/* 👇 متن خوش‌آمدگویی با استایل خفن (شبیه Paydar) */}
+            {/* 👇 متن خوش‌آمدگویی با استایل خفن */}
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
               <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
                 به Zylox
@@ -103,7 +103,7 @@ export function Home() {
         })}
       </div>
 
-      {/* بقیه بخش‌ها (چرا ما، نظرات، قوانین) */}
+      {/* بقیه بخش‌ها */}
       <section id="why-us" className="py-20 bg-white/5">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">چرا Zylox؟</h2>
