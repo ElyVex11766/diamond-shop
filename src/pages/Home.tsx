@@ -14,14 +14,11 @@ export function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const location = useLocation();
 
-  // 👇 اسکرول خودکار به بخش‌ها
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace("#", "");
       const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
+      if (element) element.scrollIntoView({ behavior: "smooth" });
     }
   }, [location]);
 
@@ -48,16 +45,18 @@ export function Home() {
               {t.stats.placeholder}
             </span>
             
-            {/* 👇 متن خوش‌آمدگویی با ترکیب رنگ سفید، خاکستری و مشکی */}
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-              <span className="text-white">به </span>
-              <span className="text-gray-400">Zylox</span>
-              <span className="text-gray-600"> Shop</span>
-              <span className="text-white"> خوش آمدید</span>
+            {/* 👇 متن خوش‌آمدگویی با استایل خفن (شبیه Paydar) */}
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
+              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+                به Zylox
+              </span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">
+                Shop خوش آمدید
+              </span>
             </h1>
             
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 mt-8">
               <LinkButton to="/#products">{t.hero.add}</LinkButton>
               <LinkButton to="/bot" variant="secondary">
                 {t.nav.bot}
@@ -72,7 +71,7 @@ export function Home() {
               <img 
                 src="/images/ZyloxLogo.png" 
                 alt="Zylox Logo" 
-                className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" 
+                className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_40px_rgba(255,255,255,0.3)]" 
               />
             </div>
           </div>
@@ -104,7 +103,7 @@ export function Home() {
         })}
       </div>
 
-      {/* بخش چرا ما */}
+      {/* بقیه بخش‌ها (چرا ما، نظرات، قوانین) */}
       <section id="why-us" className="py-20 bg-white/5">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">چرا Zylox؟</h2>
@@ -112,7 +111,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* بخش نظرات */}
       <section id="testimonials" className="py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">نظرات کاربران</h2>
@@ -120,7 +118,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* بخش قوانین */}
       <section id="rules" className="py-20 bg-white/5">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">قوانین</h2>
