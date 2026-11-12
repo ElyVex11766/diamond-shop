@@ -22,7 +22,7 @@ export function Navbar() {
   const links = [
     { to: "/", label: t.nav.home },
     { to: "/docs", label: t.nav.docs },
-    { to: "/#products", label: t.nav.shop }, // 👈 به صفحه اصلی و بخش محصولات
+    { to: "/#products", label: t.nav.shop },
     { to: "/bot", label: t.nav.bot },
     { to: "/challenge", label: "چالش" },
     { to: "/dashboard", label: t.nav.dashboard },
@@ -49,8 +49,9 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050505]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
+        {/* 👇 فقط عکس لوگو، بدون متن */}
         <NavLink to="/" aria-label="Zylox home">
-          <ZyloxLogo />
+          <ZyloxLogo withText={false} />
         </NavLink>
 
         <nav ref={navRef} className="hidden lg:flex items-center gap-1 relative" aria-label="Main navigation">
