@@ -1,218 +1,99 @@
-import { useState, useEffect } from "react";
-import { Button } from "./Button";
-import { type Product } from "../pages/products";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
+import { useCart } from "../context/CartContext";
+import { useLang } from "../i18n/LanguageContext";
 
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-  product: Product | null;
-}
+const PAYMENT_WAIT_SECONDS = 120;
 
-const CARD_NUMBER = "6037-6976-2938-7157";
-const CARD_OWNER = "جعفری"; 
-const WAIT_SECONDS = 120; // ۲ دقیقه برای فعال شدن دکمه
-
-const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
-
-export function CheckoutModal({ isOpen, onClose, product }: Props) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [amount, setAmount] = useState(1);
-  const [contactType, setContactType] = useState("discord");
-  const [contactId, setContactId] = useState("");
-  const [phone, setPhone] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isButtonActive, setIsButtonActive] = useState(false);
-  const [countdown, setCountdown] = useState(WAIT_SECONDS);
+export function Checkout() {
+  const { items, total } = useCart();
+  const { lang } = useLang();
+  const isEnglish = lang === "en";
+  const [secondsLeft, setSecondsLeft] = useState(PAYMENT_WAIT_SECONDS);
+  const [orderLink, setOrderLink] = useState("");
+  const formatPrice = (price: number) => isEnglish ? `$${price.toLocaleString("en-US")}` : `${price.toLocaleString("fa-IR")} تومان`;
 
   useEffect(() => {
-    if (isOpen) {
-      setStep(1);
-      setAmount(1);
-      setContactType("discord");
-      setContactId("");
-      setPhone("");
-      setIsButtonActive(false);
-      setCountdown(WAIT_SECONDS);
-    }
-  }, [isOpen]);
+    if (secondsLeft === 0) return;
+    const timer = window.setInterval(() => setSecondsLeft((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [secondsLeft]);
 
-  // تایمر ۲ دقیقه‌ای برای فعال شدن دکمه ثبت نهایی
-  useEffect(() => {
-    if (step !== 2) return;
-    if (countdown <= 0) {
-      setIsButtonActive(true);
-      return;
-    }
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [step, countdown]);
+  const timeLabel = useMemo(() => {
+    const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+    const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  }, [secondsLeft]);
 
-  if (!isOpen || !product) return null;
-
-  const totalPrice = product.price * amount;
-
-  const handleContinue = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contactId.trim()) {
-      alert("لطفاً آیدی خود را وارد کنید.");
-      return;
-    }
-    setStep(2);
+  const createOrderLink = () => {
+    const token = `local-${Date.now().toString(36)}`;
+    localStorage.setItem(`zylox-order-${token}`, JSON.stringify({
+      id: token,
+      product: items.map((item) => item.name).join("، "),
+      amount: items.reduce((sum, item) => sum + item.quantity, 0),
+      unit_price: items[0]?.price ?? 0,
+      total,
+      status: "در انتظار بررسی پرداخت",
+      created_at: new Date().toISOString(),
+    }));
+    setOrderLink(`${window.location.origin}/order/${token}`);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isButtonActive || isSubmitting) return;
-
-    // 👈 باز کردن تب جدید در همان لحظه کلیک (برای جلوگیری از Popup Blocker)
-    const newTab = window.open("", "_blank");
-    if (!newTab) {
-      alert("لطفاً پاپ‌آپ را در مرورگر خود فعال کنید.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(`${WORKER_URL}/api/order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product: product.name,
-          amount: amount,
-          contact: `${contactType}: ${contactId}`,
-          phone: phone,
-          unit_price: product.price,
-          total: totalPrice,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "خطا در ارسال سفارش");
-
-      // 👈 انتقال تب جدید به صفحه اختصاصی سفارش
-      newTab.location.href = `${window.location.origin}/order/${data.token}`;
-      
-      // بستن مودال
-      onClose();
-    } catch (error) {
-      console.error("Error sending order:", error);
-      newTab.close(); // بستن تب جدید در صورت خطا
-      alert("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+  if (items.length === 0) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center gap-5 px-4 text-center">
+        <h1 className="text-2xl font-black text-white">{isEnglish ? "Your cart is empty" : "سبد خرید خالی است"}</h1>
+        <Link to="/shop"><Button>{isEnglish ? "Browse products" : "مشاهده محصولات"}</Button></Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-lg bg-diamond-panel border border-diamond-border rounded-2xl p-6 shadow-glow">
-        <button onClick={onClose} className="absolute top-4 right-4 text-diamond-muted hover:text-white text-2xl z-10">×</button>
-        
-        <h3 className="text-xl font-bold text-white mb-6 text-center">
-          {step === 1 ? `سفارش: ${product.name}` : "تکمیل سفارش و پرداخت"}
-        </h3>
-
-        {step === 1 && (
-          <form onSubmit={handleContinue} className="space-y-4">
-            {!product.isSingle && (
-              <div className="bg-[#05070d] p-4 rounded-xl border border-white/5">
-                <label className="block text-sm text-diamond-muted mb-2">
-                  {product.unit === "گیگ" ? "چند گیگ نیاز دارید؟" : product.unit === "عدد" ? "چند عدد نیاز دارید؟" : "چند ملیون می‌خواهید؟"}
-                </label>
-                <input 
-                  type="number" min="1" value={amount} 
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-diamond-cyan"
-                />
-              </div>
-            )}
-
-            <div className="bg-[#05070d] p-4 rounded-xl border border-white/5">
-              <label className="block text-sm text-diamond-muted mb-2">راه ارتباطی برای ارسال سفارش:</label>
-              <div className="flex gap-4 mb-3">
-                <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                  <input type="radio" name="contact" checked={contactType === "discord"} onChange={() => setContactType("discord")} className="accent-diamond-cyan" />
-                  دیسکورد
-                </label>
-                <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                  <input type="radio" name="contact" checked={contactType === "telegram"} onChange={() => setContactType("telegram")} className="accent-diamond-cyan" />
-                  تلگرام
-                </label>
-                <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                  <input type="radio" name="contact" checked={contactType === "rubika"} onChange={() => setContactType("rubika")} className="accent-diamond-cyan" />
-                  روبیکا
-                </label>
-              </div>
-              <input 
-                type="text" placeholder={`آیدی ${contactType} خود را وارد کنید`}
-                value={contactId} onChange={(e) => setContactId(e.target.value)} required
-                className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-diamond-cyan"
-              />
-            </div>
-
-            <div>
-              <input 
-                type="tel" placeholder="شماره تماس (اختیاری)" value={phone} onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-diamond-bg border border-diamond-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-diamond-cyan text-sm"
-              />
-            </div>
-
-            <div className="bg-diamond-bg border border-diamond-cyan/30 rounded-xl p-4 flex justify-between items-center shadow-glow-sm">
-              <span className="text-sm text-diamond-muted">مبلغ قابل پرداخت:</span>
-              <span className="text-xl font-bold text-diamond-cyan">{totalPrice.toLocaleString('fa-IR')} تومان</span>
-            </div>
-
-            <Button type="submit" className="w-full py-3 text-lg">ادامه سفارش</Button>
-          </form>
-        )}
-
-        {step === 2 && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-[#05070d] p-6 rounded-xl border border-diamond-cyan/30 text-center">
-              <h4 className="text-sm text-diamond-muted mb-3">لطفاً مبلغ زیر را به شماره کارت زیر واریز کنید:</h4>
-              <div className="text-2xl font-mono font-bold text-white tracking-widest mb-2" dir="ltr">{CARD_NUMBER}</div>
-              <p className="text-xs text-diamond-muted mb-4">به نام: {CARD_OWNER}</p>
-              <div className="bg-diamond-cyan/10 border border-diamond-cyan/30 p-3 rounded-lg">
-                <p className="text-sm text-diamond-cyan font-bold">مبلغ: {totalPrice.toLocaleString('fa-IR')} تومان</p>
-              </div>
-            </div>
-
-            <div className={`text-center p-3 rounded-lg border ${isButtonActive ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'}`}>
-              {isButtonActive ? (
-                <p className="text-sm font-bold">✅ دکمه ثبت سفارش فعال شد</p>
-              ) : (
-                <p className="text-sm font-bold">⏳ لطفاً {formatTime(countdown)} صبر کنید...</p>
-              )}
-            </div>
-
-            <div className="text-center space-y-3">
-              <p className="text-xs text-diamond-muted">پس از واریز، دکمه زیر را بزنید.</p>
-              <Button 
-                type="submit" 
-                disabled={!isButtonActive || isSubmitting} 
-                className={`w-full py-3 text-lg ${!isButtonActive ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {isSubmitting ? "در حال ثبت..." : isButtonActive ? "ثبت نهایی سفارش" : "لطفاً صبر کنید..."}
-              </Button>
-            </div>
-          </form>
-        )}
+    <div className="mx-auto max-w-3xl px-4 py-14 md:px-8">
+      <div className="mb-8">
+        <p className="mb-2 text-sm text-gray-500">{isEnglish ? "Final step" : "مرحله نهایی"}</p>
+        <h1 className="text-3xl font-black text-white">{isEnglish ? "Review your order" : "بررسی و پرداخت سفارش"}</h1>
+        <p className="mt-2 text-sm leading-7 text-gray-500">{isEnglish ? "Review the items, then wait for the payment window to unlock your private order link." : "محصولات را بررسی کنید؛ پس از پایان زمان انتظار، لینک اختصاصی سفارش برای شما ساخته می‌شود."}</p>
       </div>
+
+      <Card className="space-y-4">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <img src={item.image} alt={item.name} className="h-14 w-14 rounded-lg object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{item.name}</p>
+              <p className="mt-1 text-xs text-gray-500">{item.quantity} × {formatPrice(item.price)}</p>
+            </div>
+            <span className="text-sm font-bold text-white">{formatPrice(item.price * item.quantity)}</span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between border-t border-white/10 pt-4">
+          <span className="text-sm text-gray-400">مجموع</span>
+          <span className="text-xl font-black text-white">{formatPrice(total)}</span>
+        </div>
+      </Card>
+
+      <Card className="mt-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-bold text-white">اطلاعات پرداخت</h2>
+          <p className="mt-2 text-sm leading-7 text-gray-400">شماره کارت مقصد پس از تأیید سفارش از طریق پشتیبانی اعلام می‌شود. اطلاعات کارت خود را در سایت وارد نکنید.</p>
+        </div>
+        <div className="rounded-2xl border border-sky-400/20 bg-sky-400/5 p-4 text-center">
+          <p className="text-xs text-gray-400">زمان فعال‌شدن ساخت لینک اختصاصی</p>
+          <p className="mt-2 text-3xl font-black tracking-widest text-sky-300">{timeLabel}</p>
+        </div>
+        <Button className="w-full" disabled={secondsLeft > 0 || Boolean(orderLink)} onClick={createOrderLink}>
+          {orderLink ? "لینک سفارش ساخته شد" : secondsLeft > 0 ? "لطفاً تا پایان زمان صبر کنید" : "ساخت لینک اختصاصی سفارش"}
+        </Button>
+        {orderLink && (
+          <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-center">
+            <p className="mb-2 text-sm font-semibold text-emerald-300">لینک اختصاصی آماده است</p>
+            <Link to={orderLink.replace(window.location.origin, "")} className="break-all text-xs text-sky-300 underline">{orderLink}</Link>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
