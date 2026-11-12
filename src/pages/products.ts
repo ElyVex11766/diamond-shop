@@ -8,8 +8,8 @@ export interface Product {
   category: string;
   capeTexture?: string;
   no3D?: boolean;
-  unit?: string;       
-  isSingle?: boolean;  
+  unit?: string;
+  isSingle?: boolean;
 }
 
 export const allProducts: Product[] = [
@@ -17,8 +17,7 @@ export const allProducts: Product[] = [
   { id: "v2ray-2", name: "V2Ray یک سال نامحدود", nameEn: "V2Ray Unlimited", price: 398000, image: "/images/v2ray-year.png", tag: "پرفروش", category: "network", isSingle: true },
   { id: "mc-fa", name: "اکانت فول اکسس", nameEn: "Minecraft Full Access", price: 1700000, image: "/images/mc-account.png", tag: null, category: "accounts", isSingle: true },
   { id: "mc-nfa", name: "اکانت NFA", nameEn: "Minecraft NFA", price: 5000, image: "/images/mc-account-nfa.png", tag: null, category: "accounts", isSingle: true },
-  
-  // کیپ‌ها (isSingle حذف شد تا کاربر بتونه تعداد انتخاب کنه)
+
   { id: "cape-builder", name: "کیپ ماینکرفت | Builder", nameEn: "Builder Cape", price: 30000, image: "/images/builder.png", tag: null, category: "capes", capeTexture: "https://vrc.lol/cape?hash=2c579968c64c1719740fd8c2a451461879b238002574fce48f7d1a7c36a1c7d4", unit: "عدد" },
   { id: "cape-copper", name: "کیپ ماینکرفت | Copper", nameEn: "Copper Cape", price: 45000, image: "/images/copper.png", tag: null, category: "capes", capeTexture: "https://vrc.lol/cape?hash=5e6f3193e74cd16cdd6637d9bae5484e3a37ff2a14c2d157c659a07810b1bdca", unit: "عدد" },
   { id: "cape-exp", name: "کیپ ماینکرفت | Experience", nameEn: "Experience Cape", price: 6700000, image: "/images/experience.png", tag: "افسانه‌ای", category: "capes", capeTexture: "https://vrc.lol/cape?hash=7658c5025c77cfac7574aab3af94a46a8886e3b7722a895255fbf22ab8652434", unit: "عدد" },
@@ -31,7 +30,7 @@ export const allProducts: Product[] = [
   { id: "cape-twitch", name: "کیپ ماینکرفت | Twitch [ NFA ]", nameEn: "Twitch Cape", price: 5000, image: "/images/twitch-cape.png", tag: null, category: "capes", capeTexture: "https://vrc.lol/cape?hash=cb40a92e32b57fd732a00fc325e7afb00a7ca74936ad50d8e860152e482cfbde", unit: "عدد" },
   { id: "cape-optifine", name: "کیپ ماینکرفت | Optifine", nameEn: "Optifine Cape", price: 8000, image: "/images/op-cape.png", tag: null, category: "capes", no3D: true, unit: "عدد" },
   { id: "cape-corrupted", name: "کیپ ماینکرفت | Corrupted", nameEn: "Corrupted Cape", price: 150000, image: "/images/corrupte.png", tag: null, category: "capes", no3D: true, unit: "عدد" },
-  
+
   { id: "donut-money", name: "پول دونات اس ام پی", nameEn: "Donut SMP Money", price: 3000, image: "/images/donut.png", tag: null, category: "donut", unit: "ملیون" },
   { id: "discord-bot", name: "ساخت ربات | دیسکورد", nameEn: "Custom Bot", price: 400000, image: "/images/discord-bot.png", tag: null, category: "discord", isSingle: true },
   { id: "discord-server", name: "ساخت سرور | دیسکورد", nameEn: "Custom Server", price: 250000, image: "/images/discord-server.png", tag: null, category: "discord", isSingle: true },
@@ -42,8 +41,8 @@ export const allProducts: Product[] = [
   { id: "boost-10", name: "۱۰ سرور بوست | دیسکورد", nameEn: "10x Boost", price: 550000, image: "/images/boost.png", tag: null, category: "discord", isSingle: true },
   { id: "boost-12", name: "۱۲ سرور بوست | دیسکورد", nameEn: "12x Boost", price: 600000, image: "/images/boost.png", tag: "به‌صرفه‌ترین", category: "discord", isSingle: true },
   { id: "boost-14", name: "۱۴ سرور بوست | دیسکورد", nameEn: "14x Boost", price: 700000, image: "/images/boost.png", tag: "به‌صرفه‌ترین", category: "discord", isSingle: true },
-  
+
   { id: "skin-50", name: "ساخت اسکین ۵۰٪ | ماینکرفت", nameEn: "Skin 50%", price: 50000, image: "/images/skin50.png", tag: null, category: "other", isSingle: true },
   { id: "skin-100", name: "ساخت اسکین ۱۰۰٪ | ماینکرفت", nameEn: "Skin 100%", price: 120000, image: "/images/skin100.png", tag: null, category: "other", isSingle: true },
-  { id: "photoshop", name: "پکیج فوتوشاپ", nameEn: "Photoshop Pack", price: 120000, image: "/images/photoshop.png", tag: null, category: "other", isSingle: true }
+  { id: "photoshop", name: "پکیج فوتوشاپ", nameEn: "Photoshop Pack", price: 120000, image: "/images/photoshop.png", tag: null, category: "other", isSingle: true },
 ];
