@@ -14,7 +14,7 @@ export function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const location = useLocation();
 
-  // 👇 اسکرول خودکار به بخش‌ها (مثلاً #products)
+  // 👇 اسکرول خودکار به بخش‌ها
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace("#", "");
@@ -47,9 +47,15 @@ export function Home() {
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
               {t.stats.placeholder}
             </span>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight text-white">
-              {t.hero.title}
+            
+            {/* 👇 متن خوش‌آمدگویی با ترکیب رنگ سفید، خاکستری و مشکی */}
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+              <span className="text-white">به </span>
+              <span className="text-gray-400">Zylox</span>
+              <span className="text-gray-600"> Shop</span>
+              <span className="text-white"> خوش آمدید</span>
             </h1>
+            
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
             <div className="flex flex-wrap gap-3">
               <LinkButton to="/#products">{t.hero.add}</LinkButton>
@@ -59,12 +65,12 @@ export function Home() {
             </div>
           </div>
 
-          {/* 👇 اینجا عکس لوگوی خودت رو با آدرس /images/ZyloxLogo.png نمایش می‌دیم */}
+          {/* بخش لوگو */}
           <div className="relative flex justify-center z-10">
             <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl animate-pulse-glow" aria-hidden />
             <div className="relative animate-float-slow">
               <img 
-                src="/images/ZyloxLogoRemoveBG.png" 
+                src="/images/ZyloxLogo.png" 
                 alt="Zylox Logo" 
                 className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" 
               />
