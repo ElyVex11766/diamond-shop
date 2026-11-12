@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "./Button";
-import { Card } from "./Card";
 import { type Product } from "../pages/products";
 import { useCart } from "../context/CartContext";
 import { CapeModal } from "./CapeModal";
