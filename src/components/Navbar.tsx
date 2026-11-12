@@ -87,7 +87,7 @@ export function Navbar() {
         {/* Logo image */}
         <NavLink to="/" aria-label="Zylox home" className="flex items-center gap-2">
           <img
-            src="/images/ZyloxShopRemoveBG.png"
+            src="/images/ZyloxLogoRemoveBG.png"
             alt="Zylox Shop"
             className="w-10 h-10 md:w-11 md:h-11 object-contain rounded-lg"
             onError={(e) => {
