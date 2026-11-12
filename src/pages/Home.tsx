@@ -7,7 +7,6 @@ import { ProductList } from "../components/ProductList";
 import { allProducts } from "./products";
 import { CartSidebar } from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
-import { ZyloxLogo } from "../components/ZyloxLogo"; // 👈 ایمپورت لوگو
 
 export function Home() {
   const { t } = useLang();
@@ -60,11 +59,15 @@ export function Home() {
             </div>
           </div>
 
-          {/* 👇 لوگوی Zylox وسط صفحه */}
+          {/* 👇 اینجا عکس لوگوی خودت رو با آدرس /images/ZyloxLogo.png نمایش می‌دیم */}
           <div className="relative flex justify-center z-10">
             <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl animate-pulse-glow" aria-hidden />
             <div className="relative animate-float-slow">
-              <ZyloxLogo size={220} withText={false} />
+              <img 
+                src="/images/ZyloxLogo.png" 
+                alt="Zylox Logo" 
+                className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" 
+              />
             </div>
           </div>
         </div>
