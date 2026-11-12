@@ -1,3 +1,6 @@
+/* 👇 ایمپورت فونت‌های گوگل (برای متن‌های خفن) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Vazirmatn:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,12 +10,14 @@ html, body, #root { height: 100%; }
 body {
   @apply bg-[#050505] text-white antialiased;
   background-color: #050505;
+  /* 👇 پس‌زمینه تیره با یه نور محو سفید در بالای صفحه */
   background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03), transparent 60%);
   background-attachment: fixed;
   position: relative;
   overflow-x: hidden;
 }
 
+/* 👇 بافت نویز ظریف برای عمق بیشتر */
 body::before {
   content: "";
   position: fixed;
@@ -23,6 +28,7 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
+/* 👇 فونت فارسی */
 [dir="rtl"] body {
   font-family: "Vazirmatn", "Inter", system-ui, sans-serif;
 }
@@ -33,12 +39,14 @@ body::before {
 ::-webkit-scrollbar-thumb { background: #ffffff; border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: #cccccc; }
 
+/* 👇 انیمیشن شناور (برای لوگو) */
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-14px); }
 }
 .animate-float-slow { animation: floatSlow 6s ease-in-out infinite; }
 
+/* 👇 انیمیشن درخشش (برای نور پشت لوگو) */
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.6; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }
