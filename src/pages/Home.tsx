@@ -1,9 +1,25 @@
 import { LinkButton } from "../components/Button";
 import { useLang } from "../i18n/LanguageContext";
 import { Sidebar } from "../components/Sidebar";
+import { ProductList } from "../components/ProductList";
+import { allProducts } from "./products";
+import { CartSidebar } from "../components/CartSidebar";
+import { useCart } from "../context/CartContext";
+import { useState } from "react";
 
 export function Home() {
   const { t } = useLang();
+  const { items } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const categories = [
+    { id: "accounts", title: "اکانت‌های ماینکرفت", subtitle: "اکانت‌های فول اکسس و NFA" },
+    { id: "capes", title: "کیپ‌های ماینکرفت", subtitle: "کیپ‌های کمیاب و خاص" },
+    { id: "network", title: "سرویس‌های شبکه", subtitle: "کانفیگ‌های V2Ray و VPN" },
+    { id: "donut", title: "سرور دونات", subtitle: "پول و آیتم‌های Donut SMP" },
+    { id: "discord", title: "خدمات دیسکورد", subtitle: "ربات، سرور و بوست" },
+    { id: "other", title: "سایر خدمات", subtitle: "اسکین، فوتوشاپ و..." },
+  ];
 
   return (
     <>
@@ -23,7 +39,7 @@ export function Home() {
             </h1>
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
             <div className="flex flex-wrap gap-3">
-              <LinkButton to="/shop">{t.hero.add}</LinkButton>
+              <LinkButton to="#products">{t.hero.add}</LinkButton>
               <LinkButton to="/bot" variant="secondary">
                 {t.nav.bot}
               </LinkButton>
@@ -31,59 +47,50 @@ export function Home() {
           </div>
 
           <div className="relative flex justify-center z-10">
-            {/* 👇 اینجا لوگوی خودت رو بذار (عکس رو توی پوشه public/images بذار) */}
-            <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox" className="w-64 h-64 object-contain animate-float-slow" />
+            <img src="/images/zylox-logo.png" alt="Zylox" className="w-64 h-64 object-contain animate-float-slow" />
           </div>
         </div>
       </section>
 
-      {/* بخش محصولات */}
-      <section id="products" className="py-20 bg-white/5">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">محصولات Zylox</h2>
-          <p className="text-gray-400">به زودی...</p>
+      {/* بخش محصولات (همه دسته‌بندی‌ها با هم) */}
+      <div id="products" className="space-y-16 py-20">
+        <div className="max-w-7xl mx-auto px-4 text-center mb-12">
+          <h2 className="text-4xl font-bold text-white mb-2">فروشگاه Zylox</h2>
+          <p className="text-gray-400">محصولات پریمیوم برای گیمینگ و دیسکورد</p>
         </div>
-      </section>
 
-      {/* بخش چرا ما */}
-      <section id="why-us" className="py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">چرا Zylox؟</h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="text-center p-6 bg-white/5 rounded-2xl border border-white/10">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold text-white mb-2">تحویل سریع</h3>
-              <p className="text-gray-400 text-sm">سفارش شما در کمترین زمان ممکن تحویل داده می‌شود.</p>
-            </div>
-            <div className="text-center p-6 bg-white/5 rounded-2xl border border-white/10">
-              <div className="text-4xl mb-4">🛡️</div>
-              <h3 className="text-xl font-bold text-white mb-2">امنیت بالا</h3>
-              <p className="text-gray-400 text-sm">اطلاعات شما با بهترین روش‌ها محافظت می‌شود.</p>
-            </div>
-            <div className="text-center p-6 bg-white/5 rounded-2xl border border-white/10">
-              <div className="text-4xl mb-4">💎</div>
-              <h3 className="text-xl font-bold text-white mb-2">کیفیت پریمیوم</h3>
-              <p className="text-gray-400 text-sm">محصولات با بالاترین کیفیت و بهترین قیمت.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+        {categories.map((cat) => {
+          const catProducts = allProducts.filter(p => p.category === cat.id);
+          if (catProducts.length === 0) return null;
 
-      {/* بخش نظرات */}
-      <section id="testimonials" className="py-20 bg-white/5">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">نظرات کاربران</h2>
-          <p className="text-gray-400">به زودی...</p>
-        </div>
-      </section>
+          return (
+            <section key={cat.id} className="max-w-7xl mx-auto px-4">
+              <div className="mb-6 border-b border-white/10 pb-4 flex justify-between items-end">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">{cat.title}</h3>
+                  <p className="text-sm text-gray-500 mt-1">{cat.subtitle}</p>
+                </div>
+              </div>
+              <ProductList products={catProducts} />
+            </section>
+          );
+        })}
+      </div>
 
-      {/* بخش قوانین */}
-      <section id="rules" className="py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">قوانین</h2>
-          <p className="text-gray-400">به زودی...</p>
-        </div>
-      </section>
+      {/* دکمه شناور سبد خرید */}
+      {items.length > 0 && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all hover:scale-110"
+        >
+          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+            {items.reduce((sum, i) => sum + i.quantity, 0)}
+          </span>
+        </button>
+      )}
+
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 }
