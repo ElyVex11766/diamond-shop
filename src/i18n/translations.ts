@@ -13,8 +13,8 @@ export const translations = {
       login: "Login",
       language: "Language",
     },
-    hero: {
-      title: "Welcome to Diamond Shop",
+      hero: {
+      title: "Welcome to Zylox Shop", // 👈 تغییر کرد
       subtitle: "Premium Minecraft & Discord services. Fast, secure, and reliable.",
       add: "Go to Shop",
       explore: "Explore Features",
@@ -155,8 +155,8 @@ export const translations = {
       login: "ورود",
       language: "زبان",
     },
-    hero: {
-      title: "به Diamond Shop خوش آمدید",
+      hero: {
+      title: "به Zylox Shop خوش آمدید", // 👈 تغییر کرد
       subtitle: "خرید آسان و امن خدمات ماینکرفت و دیسکورد. با بهترین قیمت و کیفیت.",
       add: "ورود به فروشگاه",
       explore: "مشاهده امکانات",
