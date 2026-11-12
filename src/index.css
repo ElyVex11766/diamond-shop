@@ -1,54 +1,192 @@
-/* 👇 ایمپورت فونت‌های گوگل (برای متن‌های خفن) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Vazirmatn:wght@400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
 
+/* ===== DARK MODE (default) ===== */
 body {
-  @apply bg-[#050505] text-white antialiased;
+  @apply text-white antialiased;
   background-color: #050505;
-  /* 👇 پس‌زمینه تیره با یه نور محو سفید در بالای صفحه */
-  background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03), transparent 60%);
+  background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04), transparent 60%);
   background-attachment: fixed;
   position: relative;
   overflow-x: hidden;
 }
 
-/* 👇 بافت نویز ظریف برای عمق بیشتر */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.02;
+  opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* 👇 فونت فارسی */
+/* ===== LIGHT MODE ===== */
+body.light {
+  @apply bg-[#f5f5f7] text-gray-900 antialiased;
+  background-color: #f5f5f7;
+  background-image: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.03), transparent 60%);
+  background-attachment: fixed;
+}
+
+body.light::before {
+  opacity: 0.015;
+}
+
 [dir="rtl"] body {
   font-family: "Vazirmatn", "Inter", system-ui, sans-serif;
 }
+[dir="ltr"] body {
+  font-family: "Inter", "Vazirmatn", system-ui, sans-serif;
+}
 
-/* 👇 اسکرول‌بار سفید */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: #ffffff; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #cccccc; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #333, #111);
+  border-radius: 8px;
+  border: 1px solid #222;
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #555, #333); }
 
-/* 👇 انیمیشن شناور (برای لوگو) */
+body.light ::-webkit-scrollbar-track { background: #e5e5e8; }
+body.light ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #bbb, #999);
+  border: 1px solid #ccc;
+}
+body.light ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #888, #666); }
+
+::selection {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+body.light ::selection {
+  background: rgba(0, 0, 0, 0.15);
+  color: #000;
+}
+
+@layer components {
+  .glass-card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+  }
+  body.light .glass-card {
+    border-color: rgba(16, 24, 40, 0.1);
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+  .glass-card-hover {
+    @apply glass-card transition-all duration-500 hover:border-white/25 hover:bg-white/[0.05] hover:shadow-[0_8px_40px_rgba(255,255,255,0.06)];
+  }
+  body.light .glass-card-hover:hover {
+    border-color: rgba(16, 24, 40, 0.2);
+    background-color: #ffffff;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  }
+  .btn-glow {
+    @apply relative overflow-hidden;
+  }
+  .btn-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+    pointer-events: none;
+  }
+  .text-gradient-white {
+    @apply bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent;
+  }
+  body.light .text-gradient-white {
+    background-image: linear-gradient(to right, #111827, #374151, #6b7280);
+  }
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #a5f3fc, #38bdf8, #2563eb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.28));
+  }
+  body.light .text-gradient-brand {
+    background-image: linear-gradient(135deg, #0f766e, #0284c7, #1d4ed8);
+  }
+  .grid-bg {
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  body.light .grid-bg {
+    background-image: linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+  }
+  .product-card-frame {
+    @apply border border-white/10 bg-white/[0.02];
+  }
+  body.light .product-card-frame {
+    border-color: #d1d5db;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+  }
+  .nav-text-primary { color: #ffffff; }
+  body.light .nav-text-primary { color: #111827; }
+  .nav-text-secondary { color: #6b7280; }
+  body.light .nav-text-secondary { color: #667085; }
+  .auth-input {
+    @apply w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition;
+  }
+  .auth-input:focus {
+    @apply border-white/30 bg-white/[0.08];
+  }
+  body.light .auth-input {
+    border-color: #d1d5db;
+    background-color: #ffffff;
+    color: #111827;
+  }
+  body.light .auth-input::placeholder { color: #9ca3af; }
+  body.light .auth-input:focus {
+    border-color: #6b7280;
+    background-color: #ffffff;
+  }
+  body.light .text-white { color: #172033 !important; }
+  body.light .text-gray-300 { color: #344054 !important; }
+  body.light .text-gray-400 { color: #667085 !important; }
+  body.light .text-gray-500 { color: #667085 !important; }
+  body.light .text-gray-600 { color: #7b8494 !important; }
+  body.light .bg-gray-900.text-white { color: #ffffff !important; }
+  body.light .bg-white.text-black { color: #ffffff !important; background-color: #111827 !important; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16); }
+  body.light .bg-white\/5 { background-color: rgba(15, 23, 42, 0.05); }
+  body.light .bg-white\/10 { background-color: rgba(15, 23, 42, 0.08); }
+  body.light .bg-white\/\[0\.03\] { background-color: rgba(255, 255, 255, 0.9); }
+  body.light .border-white\/20 { border-color: rgba(15, 23, 42, 0.22); }
+  body.light .border-white\/30 { border-color: rgba(15, 23, 42, 0.3); }
+  body.light .border-white\/10 { border-color: rgba(16, 24, 40, 0.12); }
+  body.light .border-white\/15 { border-color: rgba(16, 24, 40, 0.18); }
+  body.light .border-white\/5 { border-color: rgba(16, 24, 40, 0.08); }
+}
+
+.animate-float-slow { animation: floatSlow 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulseGlow 4s ease-in-out infinite; }
+
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-14px); }
 }
-.animate-float-slow { animation: floatSlow 6s ease-in-out infinite; }
-
-/* 👇 انیمیشن درخشش (برای نور پشت لوگو) */
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.08); }
 }
-.animate-pulse-glow { animation: pulseGlow 4s ease-in-out infinite; }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.fade-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
