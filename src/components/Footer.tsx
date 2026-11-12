@@ -7,43 +7,43 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-20 border-t border-white/10 bg-[#0a0a0a]/40">
-      <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 grid gap-10 md:grid-cols-4">
+    <footer className="mt-20 border-t border-white/8 bg-[#070707] light:bg-[#eeeef0] light:border-black/8">
+      <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 grid gap-10 md:grid-cols-4">
         <div>
           <ZyloxLogo />
-          <p className="mt-3 text-sm text-gray-400 max-w-xs">
+          <p className="mt-4 text-sm text-gray-500 max-w-xs leading-relaxed">
             {t.footer.tagline}
           </p>
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-white mb-3">{t.footer.product}</h4>
-          <ul className="space-y-2 text-sm text-gray-400">
-            <li><Link to="/features" className="hover:text-white">{t.nav.features}</Link></li>
-            <li><Link to="/shop" className="hover:text-white">{t.nav.shop}</Link></li>
-            <li><Link to="/dashboard" className="hover:text-white">{t.nav.dashboard}</Link></li>
-            <li><Link to="/status" className="hover:text-white">{t.nav.status}</Link></li>
+          <h4 className="text-sm font-semibold text-white mb-4">{t.footer.product}</h4>
+          <ul className="space-y-2.5 text-sm text-gray-500">
+            <li><Link to="/features" className="hover:text-white transition">{t.nav.features}</Link></li>
+            <li><Link to="/shop" className="hover:text-white transition">{t.nav.shop}</Link></li>
+            <li><Link to="/dashboard" className="hover:text-white transition">{t.nav.dashboard}</Link></li>
+            <li><Link to="/status" className="hover:text-white transition">{t.nav.status}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-white mb-3">{t.footer.resources}</h4>
-          <ul className="space-y-2 text-sm text-gray-400">
-            <li><Link to="/docs" className="hover:text-white">{t.nav.docs}</Link></li>
-            <li><Link to="/docs" className="hover:text-white">{t.footer.support}</Link></li>
+          <h4 className="text-sm font-semibold text-white mb-4">{t.footer.resources}</h4>
+          <ul className="space-y-2.5 text-sm text-gray-500">
+            <li><Link to="/docs" className="hover:text-white transition">{t.nav.docs}</Link></li>
+            <li><Link to="/docs" className="hover:text-white transition">{t.footer.support}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-white mb-3">{t.footer.legal}</h4>
-          <ul className="space-y-2 text-sm text-gray-400">
-            <li><span className="opacity-60">{t.footer.tos}</span></li>
-            <li><span className="opacity-60">{t.footer.privacy}</span></li>
+          <h4 className="text-sm font-semibold text-white mb-4">{t.footer.legal}</h4>
+          <ul className="space-y-2.5 text-sm text-gray-500">
+            <li><span className="opacity-50">{t.footer.tos}</span></li>
+            <li><span className="opacity-50">{t.footer.privacy}</span></li>
           </ul>
         </div>
       </div>
 
-      <div className="border-t border-white/10 py-5 text-center text-xs text-gray-500">
+      <div className="border-t border-white/5 py-5 text-center text-xs text-gray-600">
         © {year} Zylox. {t.footer.rights}
       </div>
     </footer>
