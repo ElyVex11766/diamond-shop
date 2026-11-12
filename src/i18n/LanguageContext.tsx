@@ -13,7 +13,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     const saved = localStorage.getItem("diamond-lang");
     if (saved === "en") return "en";
-    return "fa"; // پیش‌فرض: فارسی
+    return "fa";
   });
 
   useEffect(() => {
