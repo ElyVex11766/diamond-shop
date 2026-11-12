@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
-import { useLang } from "../i18n/LanguageContext";
-
-const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 
 interface Stats {
   totalMembers: number;
@@ -15,107 +12,68 @@ interface Stats {
 }
 
 export function Status() {
-  const { t } = useLang();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${WORKER_URL}/api/stats`)
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/stats")
+      .then((r) => r.json())
+      .then((data) => {
         if (data.ok) {
           setStats(data.stats);
         } else {
-          setError(data.error || t.status.statsError);
+          setError("دریافت اطلاعات ناموفق بود");
         }
+        setLoading(false);
       })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [t]);
+      .catch(() => {
+        setError("ارتباط با سرور برقرار نشد");
+        setLoading(false);
+      });
+  }, []);
 
-  // کامپوننت دایره چشمک‌زن (Pulse Dot)
-  const PulseDot = ({ color }: { color: string }) => (
-    <span className="relative flex h-3 w-3">
-      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${color} opacity-75`}></span>
-      <span className={`relative inline-flex rounded-full h-3 w-3 ${color}`}></span>
-    </span>
-  );
+  const cards = [
+    { label: "اعضای کل", value: stats?.totalMembers, icon: "👥" },
+    { label: "آنلاین", value: stats?.onlineMembers, icon: "🟢" },
+    { label: "سرورها", value: stats?.totalServers, icon: "🖥️" },
+    { label: "وضعیت ربات", value: stats?.botStatus === "online" ? "آنلاین" : "آفلاین", icon: "⚡" },
+  ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 md:px-8 py-16">
-      <SectionTitle title={t.status.title} subtitle={t.status.subtitle} />
-      
-      {loading && (
-        <p className="text-center text-diamond-muted">{t.status.loadStats}</p>
-      )}
+    <div className="mx-auto max-w-7xl px-4 md:px-8 py-16">
+      <SectionTitle title="وضعیت سرور" subtitle="آمار زنده سرور دیسکورد و ربات" />
 
-      {error && (
-        <p className="text-center text-red-400">{error}</p>
-      )}
-
-      {stats && !loading && (
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-20">
+          <p className="text-gray-500">{error}</p>
+        </div>
+      ) : (
         <>
-          {/* هدر سرور و پروفایل ربات */}
-          <div className="mb-8 bg-diamond-panel border border-diamond-border rounded-2xl p-6 flex items-center gap-4">
-            {stats.botAvatar && (
-              <img src={stats.botAvatar} alt="Bot" className="w-16 h-16 rounded-full border-2 border-diamond-cyan shadow-glow-sm" />
-            )}
-            <div>
-              <h2 className="text-2xl font-bold text-white">Diamond BOT</h2>
-              <p className="text-sm text-diamond-muted">Discord Server</p>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-12">
+            {cards.map((c) => (
+              <Card key={c.label} className="text-center">
+                <div className="text-3xl mb-3">{c.icon}</div>
+                <div className="text-3xl font-black text-white">{c.value ?? "—"}</div>
+                <div className="text-xs text-gray-500 mt-1">{c.label}</div>
+              </Card>
+            ))}
+          </div>
+
+          {stats?.botAvatar && (
+            <div className="flex flex-col items-center gap-4">
+              <img
+                src={stats.botAvatar}
+                alt="Bot Avatar"
+                className="w-20 h-20 rounded-2xl border border-white/15"
+              />
+              <p className="text-sm text-gray-400">{stats.serverName}</p>
             </div>
-          </div>
-
-          {/* کارت‌های آمار */}
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            <Card className="text-center">
-              <div className="text-2xl font-extrabold text-diamond-cyan">{stats.totalMembers.toLocaleString('fa-IR')}</div>
-              <div className="mt-2 text-sm text-diamond-muted">{t.status.totalMembers}</div>
-            </Card>
-            <Card className="text-center">
-              <div className="text-2xl font-extrabold text-emerald-400">{stats.onlineMembers.toLocaleString('fa-IR')}</div>
-              <div className="mt-2 text-sm text-diamond-muted">{t.status.onlineMembers}</div>
-            </Card>
-            <Card className="text-center">
-              <div className="text-2xl font-extrabold text-diamond-cyan">{stats.totalServers.toLocaleString('fa-IR')}</div>
-              <div className="mt-2 text-sm text-diamond-muted">{t.status.activeServers}</div>
-            </Card>
-            <Card className="text-center">
-              <div className="flex justify-center items-center gap-2 mt-2">
-                <PulseDot color={stats.botStatus === "online" ? "bg-emerald-400" : "bg-red-400"} />
-                <span className={`text-xl font-extrabold ${stats.botStatus === "online" ? "text-emerald-400" : "text-red-400"}`}>
-                  {stats.botStatus === "online" ? t.status.botOnline : t.status.botOffline}
-                </span>
-              </div>
-              <div className="mt-2 text-sm text-diamond-muted">{t.status.botStatus}</div>
-            </Card>
-          </div>
-
-          {/* وضعیت سیستم */}
-          <div className="grid gap-4">
-            <Card className="flex items-center justify-between">
-              <span className="text-white">{t.status.botApi}</span>
-              <span className="inline-flex items-center gap-2 text-sm text-emerald-300">
-                <PulseDot color="bg-emerald-400" />
-                {t.status.operational}
-              </span>
-            </Card>
-            <Card className="flex items-center justify-between">
-              <span className="text-white">{t.status.database}</span>
-              <span className="inline-flex items-center gap-2 text-sm text-emerald-300">
-                <PulseDot color="bg-emerald-400" />
-                {t.status.connected}
-              </span>
-            </Card>
-            <Card className="flex items-center justify-between">
-              <span className="text-white">{t.status.dashboard}</span>
-              <span className="inline-flex items-center gap-2 text-sm text-emerald-300">
-                <PulseDot color="bg-emerald-400" />
-                {t.status.operational}
-              </span>
-            </Card>
-          </div>
+          )}
         </>
       )}
     </div>
