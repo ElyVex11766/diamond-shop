@@ -15,6 +15,9 @@ import { OrderPage } from "./pages/OrderPage";
 import { Admin } from "./pages/Admin";
 import { AdminUser } from "./pages/AdminUser";
 import { Challenge } from "./pages/Challenge";
+import { Checkout } from "./pages/Checkout";
+// داخل Routes:
+<Route path="/checkout" element={<Checkout />} />
 
 export default function App() {
   return (
