@@ -47,11 +47,14 @@ export function Home() {
             
             {/* 👇 متن خوش‌آمدگویی با استایل خفن */}
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">
+                به
+                </span>
               <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
-                به Zylox
+                Zylox Shop
               </span>
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">
-                Shop خوش آمدید
+                خوش آمدید
               </span>
             </h1>
             
