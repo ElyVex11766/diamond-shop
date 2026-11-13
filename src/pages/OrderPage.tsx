@@ -1,70 +1,121 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 
+interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
 interface Order {
   id: string;
-  product: string;
-  amount: number;
-  unit_price: number;
+  token: string;
+  items?: OrderItem[];
+  product?: string;
+  amount?: number;
   total: number;
-  platform: string;
-  platform_user_id: string;
-  phone: string;
   status: string;
+  delivery_info?: string | null;
+  completed_at?: string | null;
+  expires_at?: string | null;
+  started_at?: string | null;
   created_at: string;
-  expires_at: string;
-  edited_at: string | null;
 }
+
+const CARD_NUMBER = "6037-6976-2938-7157";
+const CARD_OWNER = "جعفری";
+const CONFIRM_DELAY = 120; // 2 دقیقه
 
 export function OrderPage() {
   const { token } = useParams<{ token: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expired, setExpired] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState("");
+  const [confirmTimer, setConfirmTimer] = useState(CONFIRM_DELAY);
+  const [canConfirm, setCanConfirm] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [countdown, setCountdown] = useState("");
+
+  const fetchOrder = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/orders/${token}`);
+      const data = await res.json();
+      if (!data.ok) {
+        if (data.notFound) setNotFound(true);
+        else setError(data.error || "خطا");
+        setLoading(false);
+        return;
+      }
+      setOrder(data.order);
+      setLoading(false);
+    } catch {
+      setError("ارتباط با سرور برقرار نشد");
+      setLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
-    if (!token) return;
-    const localOrder = localStorage.getItem(`zylox-order-${token}`);
-    if (localOrder) {
-      try {
-        const saved = JSON.parse(localOrder) as Partial<Order>;
-        setOrder({
-          id: saved.id || token,
-          product: saved.product || "سفارش Zylox",
-          amount: saved.amount || 1,
-          unit_price: saved.unit_price || 0,
-          total: saved.total || 0,
-          platform: "پشتیبانی",
-          platform_user_id: "-",
-          phone: "-",
-          status: saved.status || "در انتظار بررسی پرداخت",
-          created_at: saved.created_at || new Date().toISOString(),
-          expires_at: "",
-          edited_at: null,
-        });
-      } catch {
-        setError("لینک سفارش معتبر نیست");
-      }
-      setLoading(false);
+    fetchOrder();
+  }, [fetchOrder]);
+
+  // تایمر ۲ دقیقه anti-spam (فقط وقتی pending)
+  useEffect(() => {
+    if (!order || order.status !== "pending") return;
+    if (confirmTimer <= 0) {
+      setCanConfirm(true);
       return;
     }
+    const t = setTimeout(() => setConfirmTimer((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [order, confirmTimer]);
 
-    fetch(`/api/order/${token}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.expired) setExpired(true);
-        else if (data.ok) setOrder(data.order);
-        else setError(data.error || "سفارش پیدا نشد");
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("ارتباط با سرور برقرار نشد");
-        setLoading(false);
-      });
-  }, [token]);
+  // تایمر ۳۰ دقیقه شمارش معکوس (اگه expires_at هست)
+  useEffect(() => {
+    if (!order?.expires_at) {
+      setCountdown("");
+      return;
+    }
+    const update = () => {
+      const diff = new Date(order.expires_at!).getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdown("منقضی شده");
+        return;
+      }
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${m}:${s.toString().padStart(2, "0")}`);
+    };
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
+  }, [order?.expires_at]);
+
+  const handleConfirm = async () => {
+    if (!token || !canConfirm) return;
+    setConfirming(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${token}`, { method: "PATCH" });
+      const data = await res.json();
+      if (!data.ok) {
+        if (data.notFound) setNotFound(true);
+        else setError(data.error || "خطا در تأیید");
+        setConfirming(false);
+        return;
+      }
+      await fetchOrder();
+      setConfirming(false);
+    } catch {
+      setError("ارتباط با سرور برقرار نشد");
+      setConfirming(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -74,66 +125,188 @@ export function OrderPage() {
     );
   }
 
-  if (expired) {
+  if (notFound) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
         <div className="text-5xl mb-2">⏰</div>
-        <h1 className="text-2xl font-bold text-white">لینک منقضی شده است</h1>
+        <h1 className="text-2xl font-bold text-white">لینک منقضی یا نامعتبر</h1>
         <p className="text-gray-400">این لینک سفارش دیگر معتبر نیست.</p>
-        <Link to="/"><Button>بازگشت به خانه</Button></Link>
+        <Link to="/shop"><Button>بازگشت به فروشگاه</Button></Link>
       </div>
     );
   }
 
-  if (error || !order) {
+  if (error && !order) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
-        <p className="text-gray-400">{error || "سفارش پیدا نشد"}</p>
-        <Link to="/"><Button>بازگشت به خانه</Button></Link>
+        <p className="text-gray-400">{error}</p>
+        <Link to="/shop"><Button>بازگشت به فروشگاه</Button></Link>
       </div>
     );
   }
+
+  if (!order) return null;
 
   const formatPrice = (n: number) => n.toLocaleString("fa-IR") + " تومان";
 
+  // سفارش کامل شده
+  if (order.status === "completed") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 md:px-8 py-16">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-semibold mb-4">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            سفارش شما کامل شد
+          </div>
+          <h1 className="text-3xl font-black text-white">اطلاعات تحویل</h1>
+          <p className="text-sm text-gray-500 mt-2">آیدی: {order.id}</p>
+        </div>
+
+        <Card className="space-y-4">
+          <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-4">
+            <p className="text-xs text-emerald-300 mb-2 font-semibold">اطلاعات تحویل:</p>
+            <pre className="text-sm text-white whitespace-pre-wrap font-sans leading-7">{order.delivery_info}</pre>
+          </div>
+          {order.completed_at && (
+            <p className="text-xs text-gray-500 text-center">
+              تکمیل شده در: {new Date(order.completed_at).toLocaleString("fa-IR")}
+            </p>
+          )}
+        </Card>
+
+        <div className="mt-8 text-center">
+          <Link to="/dashboard"><Button>بازگشت به داشبورد</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  // در حال انجام
+  if (order.status === "processing") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 md:px-8 py-16">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-sm font-semibold mb-4">
+            <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
+            سفارش شما در حال انجام است
+          </div>
+          <h1 className="text-3xl font-black text-white">در حال پردازش</h1>
+          <p className="text-sm text-gray-500 mt-2">آیدی: {order.id}</p>
+        </div>
+
+        <Card className="space-y-4">
+          <p className="text-sm text-gray-400 leading-8 text-center">
+            تیم پشتیبانی در حال آماده‌سازی سفارش شماست.
+            <br />
+            اطلاعات تحویل به‌زودی از طریق نوتیفیکیشن داشبورد و تیکت دیسکورد ارسال می‌شود.
+          </p>
+          {order.started_at && (
+            <p className="text-xs text-gray-500 text-center">
+              شروع شده در: {new Date(order.started_at).toLocaleString("fa-IR")}
+            </p>
+          )}
+        </Card>
+
+        <div className="mt-8 text-center">
+          <Link to="/dashboard"><Button variant="secondary">بازگشت به داشبورد</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  // pending یا confirmed
   return (
     <div className="mx-auto max-w-2xl px-4 md:px-8 py-16">
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-semibold mb-4">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          سفارش ثبت شد
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/15 text-white text-sm font-semibold mb-4">
+          <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+          {order.status === "confirmed" ? "در انتظار بررسی پرداخت" : "در انتظار تأیید"}
         </div>
         <h1 className="text-3xl font-black text-white">جزئیات سفارش</h1>
         <p className="text-sm text-gray-500 mt-2">آیدی: {order.id}</p>
+        {countdown && (
+          <p className={`text-sm font-bold mt-3 ${countdown === "منقضی شده" ? "text-red-400" : "text-yellow-400"}`}>
+            ⏳ زمان باقی‌مانده: {countdown}
+          </p>
+        )}
       </div>
 
       <Card className="space-y-4">
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-sm text-gray-400">محصول</span>
-          <span className="text-sm font-bold text-white">{order.product}</span>
-        </div>
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-sm text-gray-400">تعداد</span>
-          <span className="text-sm font-bold text-white">{order.amount}</span>
-        </div>
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-sm text-gray-400">قیمت واحد</span>
-          <span className="text-sm font-bold text-white">{formatPrice(order.unit_price)}</span>
-        </div>
-        <div className="flex justify-between items-center pb-4 border-b border-white/10">
-          <span className="text-sm text-gray-400">پلتفرم</span>
-          <span className="text-sm font-bold text-white">{order.platform}: {order.platform_user_id}</span>
-        </div>
+        {order.items && order.items.length > 0 ? (
+          <div className="space-y-2 pb-4 border-b border-white/10">
+            <p className="text-xs text-gray-500 font-semibold mb-2">محصولات:</p>
+            {order.items.map((it, idx) => (
+              <div key={idx} className="flex justify-between items-center text-sm">
+                <span className="text-white">{it.name} × {it.quantity}</span>
+                <span className="text-gray-400">{formatPrice(it.price * it.quantity)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+              <span className="text-sm text-gray-400">محصول</span>
+              <span className="text-sm font-bold text-white">{order.product}</span>
+            </div>
+            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+              <span className="text-sm text-gray-400">تعداد</span>
+              <span className="text-sm font-bold text-white">{order.amount}</span>
+            </div>
+          </>
+        )}
+
         <div className="flex justify-between items-center pt-2">
           <span className="text-base font-semibold text-white">مجموع</span>
           <span className="text-2xl font-black text-white">{formatPrice(order.total)}</span>
         </div>
       </Card>
 
+      {order.status === "pending" && (
+        <>
+          <Card className="mt-6 space-y-3">
+            <p className="text-sm text-gray-400">لطفاً مبلغ را به شماره کارت زیر واریز کنید:</p>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+              <p className="text-xl font-mono font-bold text-white tracking-widest mb-2" dir="ltr">{CARD_NUMBER}</p>
+              <p className="text-xs text-gray-500">به نام: {CARD_OWNER}</p>
+            </div>
+          </Card>
+
+          <div className={`mt-6 text-center p-4 rounded-xl border ${canConfirm ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"}`}>
+            {canConfirm ? (
+              <p className="font-bold text-sm">✅ دکمه تأیید فعال شد</p>
+            ) : (
+              <p className="font-bold text-sm">
+                ⏳ لطفاً {Math.floor(confirmTimer / 60)}:{(confirmTimer % 60).toString().padStart(2, "0")} صبر کنید...
+              </p>
+            )}
+          </div>
+
+          {error && <p className="text-sm text-red-400 mt-3 text-center">{error}</p>}
+
+          <Button
+            onClick={handleConfirm}
+            disabled={!canConfirm || confirming}
+            className={`w-full mt-4 py-4 text-lg ${!canConfirm ? "opacity-50 cursor-not-allowed" : "bg-white text-black hover:bg-gray-200"}`}
+          >
+            {confirming ? "در حال تأیید..." : canConfirm ? "تأیید سفارش" : "لطفاً صبر کنید..."}
+          </Button>
+        </>
+      )}
+
+      {order.status === "confirmed" && (
+        <Card className="mt-6">
+          <p className="text-sm text-gray-400 leading-8 text-center">
+            سفارش شما تأیید شد و در صف بررسی قرار گرفت.
+            <br />
+            پس از تأیید پرداخت توسط پشتیبانی، سفارش شما در حال انجام قرار می‌گیرد.
+          </p>
+        </Card>
+      )}
+
       <div className="mt-6 text-center">
-        <p className="text-xs text-gray-500">
-          وضعیت سفارش پس از بررسی پرداخت از طریق پشتیبانی به‌روزرسانی می‌شود.
-        </p>
+        <Link to="/dashboard" className="text-xs text-gray-500 hover:text-white transition">
+          ← بازگشت به داشبورد
+        </Link>
       </div>
     </div>
   );
