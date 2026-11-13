@@ -1,29 +1,37 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
-import { useLang } from "../i18n/LanguageContext";
+
+interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 interface Order {
   id: string;
-  date: string;
-  items: { name: string; price: number; quantity: number }[];
+  token: string;
+  items?: OrderItem[];
   total: number;
-  status: "pending" | "paid";
-  expiresAt: string;
-  link: string;
+  status: string;
+  expires_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  created_at: string;
+  order_url: string;
 }
 
 export function Dashboard() {
-  const { t } = useLang();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [now, setNow] = useState(Date.now());
 
-  // به‌روزرسانی تایمر هر ثانیه
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -31,10 +39,12 @@ export function Dashboard() {
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem("diamond_user");
-    if (!savedUserStr) { navigate("/login"); return; }
+    if (!savedUserStr) {
+      navigate("/login");
+      return;
+    }
     const savedUser = JSON.parse(savedUserStr);
-    
-    // آپدیت اطلاعات دیسکورد از URL
+
     const discordId = searchParams.get("discord_id");
     const discordUsername = searchParams.get("discord_username");
     const discordAvatar = searchParams.get("discord_avatar");
@@ -46,11 +56,28 @@ export function Dashboard() {
       navigate("/dashboard", { replace: true });
     }
     setUser(savedUser);
-
-    // لود کردن سفارش‌ها
-    const savedOrders = localStorage.getItem(`diamond_orders_${savedUser.id}`);
-    if (savedOrders) setOrders(JSON.parse(savedOrders));
   }, [navigate, searchParams]);
+
+  const fetchOrders = useCallback(async () => {
+    if (!user?.id) return;
+    setLoadingOrders(true);
+    try {
+      const res = await fetch("/api/orders/my-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id }),
+      });
+      const data = await res.json();
+      if (data.ok) setOrders(data.orders || []);
+    } catch {
+      // ignore
+    }
+    setLoadingOrders(false);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) fetchOrders();
+  }, [user?.id, fetchOrders]);
 
   const handleLogout = () => {
     localStorage.removeItem("diamond_user");
@@ -59,13 +86,23 @@ export function Dashboard() {
 
   if (!user) return null;
 
-  // محاسبه زمان باقی‌مانده
-  const getTimeLeft = (expiresAt: string) => {
+  const getTimeLeft = (expiresAt?: string | null) => {
+    if (!expiresAt) return null;
     const diff = new Date(expiresAt).getTime() - now;
     if (diff <= 0) return "منقضی شده";
     const m = Math.floor(diff / 60000);
     const s = Math.floor((diff % 60000) / 1000);
     return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "pending": return { text: "در انتظار تأیید", color: "text-yellow-400" };
+      case "confirmed": return { text: "تأیید شده", color: "text-sky-400" };
+      case "processing": return { text: "در حال انجام", color: "text-indigo-400" };
+      case "completed": return { text: "کامل شده", color: "text-emerald-400" };
+      default: return { text: status, color: "text-gray-400" };
+    }
   };
 
   return (
@@ -106,37 +143,51 @@ export function Dashboard() {
             </Card>
           </div>
 
-          {/* بخش سفارش‌ها */}
           <Card>
-            <h3 className="text-lg font-bold text-white mb-4">سفارش‌های من</h3>
-            {orders.length === 0 ? (
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-white">سفارش‌های من</h3>
+              <button onClick={fetchOrders} className="text-xs text-gray-500 hover:text-white transition">🔄 به‌روزرسانی</button>
+            </div>
+
+            {loadingOrders ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              </div>
+            ) : orders.length === 0 ? (
               <p className="text-center text-gray-500 py-6">هنوز سفارشی ثبت نکرده‌اید.</p>
             ) : (
               <div className="space-y-3">
-                {orders.map((order) => (
-                  <div key={order.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="text-white font-bold">سفارش {order.id}</p>
-                        <p className="text-xs text-gray-500">{order.date}</p>
+                {orders.map((order) => {
+                  const st = statusLabel(order.status);
+                  const timeLeft = order.status === "processing" ? null : getTimeLeft(order.expires_at);
+                  const itemsText = order.items?.map((i) => `${i.name} × ${i.quantity}`).join("، ") || "—";
+                  return (
+                    <div key={order.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white font-bold text-sm truncate">سفارش {order.id}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{new Date(order.created_at).toLocaleString("fa-IR")}</p>
+                        </div>
+                        <div className="text-left shrink-0 ml-3">
+                          <p className="text-white font-bold text-sm">{order.total.toLocaleString("fa-IR")} تومان</p>
+                          <p className={`text-xs font-semibold mt-0.5 ${st.color}`}>{st.text}</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className="text-diamond-cyan font-bold">{order.total.toLocaleString("fa-IR")} تومان</p>
-                        <p className="text-xs text-yellow-400">⏳ {getTimeLeft(order.expiresAt)}</p>
-                      </div>
+                      <p className="text-xs text-gray-400 line-clamp-1 mb-2">{itemsText}</p>
+                      {timeLeft && (
+                        <p className={`text-xs font-bold ${timeLeft === "منقضی شده" ? "text-red-400" : "text-yellow-400"}`}>
+                          ⏳ {timeLeft}
+                        </p>
+                      )}
+                      <Link
+                        to={`/order/${order.token}`}
+                        className="inline-block mt-2 text-xs text-white underline decoration-white/30 hover:decoration-white"
+                      >
+                        جزئیات سفارش ←
+                      </Link>
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {order.items.map((it, idx) => (
-                        <span key={idx} className="text-xs bg-white/10 px-2 py-1 rounded-md text-gray-300">
-                          {it.name} × {it.quantity}
-                        </span>
-                      ))}
-                    </div>
-                    <a href={order.link} className="inline-block mt-3 text-sm text-white underline decoration-white/30 hover:decoration-white">
-                      مشاهده جزئیات سفارش
-                    </a>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Card>
