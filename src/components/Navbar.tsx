@@ -58,7 +58,7 @@ export function Navbar() {
         
         {/* لوگو سمت راست */}
         <NavLink to="/" aria-label="Zylox home">
-          <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
+          <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
         </NavLink>
 
         {/* منو در وسط */}
