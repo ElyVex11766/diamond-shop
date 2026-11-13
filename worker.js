@@ -600,4 +600,47 @@ export default {
         const today = new Date().toISOString().split("T")[0];
         const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?").bind(name, contact, `${today}%`).first();
         const dailyPlays = countResult?.count || 0;
-        if (dailyPlays >= 5) return jsonResponse({ ok: false, limitReached: true, message: "شما امروز
+        if (dailyPlays >= 5) return jsonResponse({ ok: false, limitReached: true, message: "شما امروز ۵ بار تست داده‌اید." }, 403);
+
+        await env.DB.prepare("INSERT INTO daily_plays (id, name, contact, played_at) VALUES (?, ?, ?, ?)").bind(crypto.randomUUID(), name, contact, new Date().toISOString()).run();
+
+        const existing = await env.DB.prepare("SELECT * FROM leaderboard WHERE name = ? AND contact = ?").bind(name, contact).first();
+        if (existing) {
+          if (time < existing.time) await env.DB.prepare("UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?").bind(time, new Date().toISOString(), existing.id).run();
+        } else {
+          await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(crypto.randomUUID(), name, contact, time, new Date().toISOString()).run();
+        }
+        await env.DB.prepare(`DELETE FROM leaderboard WHERE id NOT IN (SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10)`).run();
+
+        return jsonResponse({ ok: true, message: "رکورد ثبت شد", remaining: 5 - dailyPlays - 1 }, 201);
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    // 22. Leaderboard: GET
+    if (url.pathname === "/api/leaderboard" && method === "GET") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        await ensureLeaderboardTable(env.DB);
+        const result = await env.DB.prepare("SELECT * FROM leaderboard ORDER BY time ASC LIMIT 10").all();
+        return jsonResponse({ ok: true, entries: result.results || [] });
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    // 23. check-limit
+    if (url.pathname === "/api/check-limit" && method === "POST") {
+      try {
+        if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
+        const { name, contact } = await request.json();
+        if (!name || !contact) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
+        await ensureDailyPlaysTable(env.DB);
+        const today = new Date().toISOString().split("T")[0];
+        const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?").bind(name, contact, `${today}%`).first();
+        const dailyPlays = countResult?.count || 0;
+        return jsonResponse({ ok: true, dailyPlays, remaining: Math.max(0, 5 - dailyPlays) });
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    if (env.ASSETS) return env.ASSETS.fetch(request);
+    return jsonResponse({ ok: false, error: "Not found" }, 404);
+  },
+};
