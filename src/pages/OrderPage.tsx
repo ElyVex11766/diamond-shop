@@ -3,9 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { useLang } from "../i18n/LanguageContext";
-// داخل کامپوننت:
-const { lang } = useLang();
-const isEnglish = lang === "en";
 
 interface OrderItem {
   id: string;
@@ -34,14 +31,31 @@ const CARD_NUMBER = "6037-6976-2938-7157";
 const CARD_OWNER = "جعفری";
 const CONFIRM_DELAY = 120; // 2 دقیقه
 
+// 👇 کاربر تست — تایمر ۲ دقیقه نداره
+const TEST_USERNAME = "elyas";
+
 export function OrderPage() {
   const { token } = useParams<{ token: string }>();
+  const { lang } = useLang();
+  const isEnglish = lang === "en";
+
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState("");
-  const [confirmTimer, setConfirmTimer] = useState(CONFIRM_DELAY);
-  const [canConfirm, setCanConfirm] = useState(false);
+
+  // 👇 اگه کاربر تست بود، تایمر از اول 0 و دکمه فعال
+  const isTestUser = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("diamond_user") || "null");
+      return u?.username === TEST_USERNAME;
+    } catch {
+      return false;
+    }
+  })();
+
+  const [confirmTimer, setConfirmTimer] = useState<number>(isTestUser ? 0 : CONFIRM_DELAY);
+  const [canConfirm, setCanConfirm] = useState<boolean>(isTestUser);
   const [confirming, setConfirming] = useState(false);
   const [countdown, setCountdown] = useState("");
 
@@ -68,8 +82,12 @@ export function OrderPage() {
     fetchOrder();
   }, [fetchOrder]);
 
-  // تایمر ۲ دقیقه anti-spam (فقط وقتی pending)
+  // تایمر ۲ دقیقه anti-spam (فقط برای غیر از کاربر تست)
   useEffect(() => {
+    if (isTestUser) {
+      setCanConfirm(true);
+      return;
+    }
     if (!order || order.status !== "pending") return;
     if (confirmTimer <= 0) {
       setCanConfirm(true);
@@ -77,9 +95,9 @@ export function OrderPage() {
     }
     const t = setTimeout(() => setConfirmTimer((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [order, confirmTimer]);
+  }, [order, confirmTimer, isTestUser]);
 
-  // تایمر ۳۰ دقیقه شمارش معکوس (اگه expires_at هست)
+  // تایمر ۳۰ دقیقه شمارش معکوس
   useEffect(() => {
     if (!order?.expires_at) {
       setCountdown("");
@@ -294,6 +312,21 @@ export function OrderPage() {
           >
             {confirming ? "در حال تأیید..." : canConfirm ? "تأیید سفارش" : "لطفاً صبر کنید..."}
           </Button>
+
+          {/* قوانین و شرایط */}
+          <div className="border-t border-white/10 pt-8 mt-8">
+            <h3 className="text-lg font-bold text-white mb-4">
+              {isEnglish ? "Terms & Conditions" : "قوانین و شرایط"}
+            </h3>
+            <ul className="text-sm text-gray-400 space-y-2 list-disc list-inside leading-relaxed">
+              <li>{isEnglish ? "Delivery time is between 1 to 96 hours." : "زمان تحویل سفارش بین ۱ تا ۹۶ ساعت است."}</li>
+              <li>{isEnglish ? "The information entered during the order must be correct." : "اطلاعات واردشده هنگام ثبت سفارش باید صحیح باشند."}</li>
+              <li>{isEnglish ? "The user is allowed to change the platform and contact ID only once." : "کاربر فقط یک بار اجازه تغییر پلتفرم و آیدی ارتباطی را دارد."}</li>
+              <li>{isEnglish ? "Changing the product, quantity, and price after placing the order is not possible." : "تغییر محصول، تعداد و مبلغ پس از ثبت سفارش امکان‌پذیر نیست."}</li>
+              <li>{isEnglish ? "Deliberate misuse of the ordering system, submitting fake information, or attempting to bypass restrictions may result in access restrictions, and if necessary, legal action will be taken." : "سوءاستفاده عمدی از سیستم سفارش، ثبت اطلاعات جعلی یا تلاش برای دورزدن محدودیت‌ها می‌تواند باعث محدودیت دسترسی شود و در صورت لزوم، اقدامات قانونی انجام می‌شود."}</li>
+              <li>{isEnglish ? "Orders must be claimed within 30 minutes of creation. Unclaimed orders are automatically cancelled and removed from the dashboard." : "سفارش‌ها باید حداکثر ۳۰ دقیقه پس از ثبت، توسط پشتیبانی تأیید و آغاز شوند. سفارش‌های تأییدنشده به‌صورت خودکار لغو و از داشبورد حذف می‌شوند."}</li>
+            </ul>
+          </div>
         </>
       )}
 
