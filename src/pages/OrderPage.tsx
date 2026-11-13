@@ -31,9 +31,6 @@ const CARD_NUMBER = "6037-6976-2938-7157";
 const CARD_OWNER = "جعفری";
 const CONFIRM_DELAY = 120; // 2 دقیقه
 
-// 👇 کاربر تست — تایمر ۲ دقیقه نداره
-const TEST_USERNAME = "elyas";
-
 export function OrderPage() {
   const { token } = useParams<{ token: string }>();
   const { lang } = useLang();
