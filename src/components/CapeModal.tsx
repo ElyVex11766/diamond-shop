@@ -38,7 +38,6 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
         const width = containerRef.current.clientWidth;
         const height = 400;
 
-        // 👇 اسکین پیش‌فرض رو به ItzRealElyas تغییر دادم
         const viewer = new skinview3d.SkinViewer({
           width,
           height,
@@ -55,7 +54,6 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
         viewer.controls.enableZoom = false;
         viewer.autoRotate = true;
 
-        // 👇 تنظیم انیمیشن اولیه (ایستاده)
         viewer.animation = new skinview3d.IdleAnimation();
         
         containerRef.current.appendChild(viewer.canvas);
@@ -72,7 +70,6 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
     };
   }, [isOpen, selectedCape]);
 
-  // 👇 تابع تغییر انیمیشن
   const handleAnimationChange = async (type: "idle" | "walk" | "run" | "elytra") => {
     if (!viewerRef.current) return;
     const skinview3d = await import("skinview3d");
@@ -87,9 +84,10 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
         break;
       case "run":
         viewerRef.current.animation = new skinview3d.RunningAnimation();
+        // 👇 تنظیم سرعت برای اینکه شبیه دویدن اصلی ماینکرفت بشه
+        if (viewerRef.current.animation) viewerRef.current.animation.speed = 1; 
         break;
       case "elytra":
-        // اگه انیمیشن الایترا توی کتابخانه بود، اینجا ست می‌شه (معمولاً به صورت دستی)
         viewerRef.current.animation = new skinview3d.IdleAnimation();
         break;
     }
@@ -133,54 +131,23 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
             />
           </div>
         ) : (
-          <div className="relative flex gap-4 mb-6">
-            {/* 👇 دکمه‌های کنترل سمت چپ */}
-            <div className="flex flex-col gap-2 justify-center">
-              <button
-                onClick={() => handleAnimationChange("idle")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                  animation === "idle" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30"
-                }`}
-              >
-                Stand
-              </button>
-              <button
-                onClick={() => handleAnimationChange("walk")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                  animation === "walk" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30"
-                }`}
-              >
-                Walk
-              </button>
-              <button
-                onClick={() => handleAnimationChange("run")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                  animation === "run" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30"
-                }`}
-              >
-                Run
-              </button>
-              
-              {/* 👇 دکمه Elytra با عکس خودت */}
-              <button
+          <div className="flex flex-col gap-4 mb-6">
+            
+            {/* 👇 دکمه Elytra (بالا سمت چپ) */}
+            <div className="flex justify-start px-2">
+               <button
                 onClick={() => handleAnimationChange("elytra")}
-                className={`px-2 py-1.5 rounded-lg border transition flex items-center justify-center ${
+                className={`w-12 h-12 rounded-xl border transition flex items-center justify-center ${
                   animation === "elytra" ? "bg-white border-white" : "bg-white/5 border-white/10 hover:border-white/30"
                 }`}
+                title="Elytra"
               >
-                <img src="/images/elytra.png" alt="Elytra" className="w-6 h-6 object-contain" />
-              </button>
-
-              <button
-                onClick={toggleRotate}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-white/10 bg-white/5 text-gray-400 hover:border-white/30 transition"
-              >
-                {autoRotate ? "Stop" : "Rotate"}
+                <img src="/images/elytra.png" alt="Elytra" className="w-8 h-8 object-contain" />
               </button>
             </div>
 
             {/* 👇 مدل سه بعدی */}
-            <div className="flex-1 relative bg-[#050505] rounded-2xl border border-white/5 p-4 min-h-[400px] flex items-center justify-center">
+            <div className="relative bg-[#050505] rounded-2xl border border-white/5 p-4 min-h-[350px] flex items-center justify-center">
               {loading && (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -189,10 +156,44 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
               )}
               <div ref={containerRef} className="w-full flex items-center justify-center" />
             </div>
+
+            {/* 👇 دکمه‌های اصلی (پایین اسکین) */}
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => handleAnimationChange("idle")}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold border transition ${
+                  animation === "idle" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30"
+                }`}
+              >
+                Stand
+              </button>
+              <button
+                onClick={() => handleAnimationChange("walk")}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold border transition ${
+                  animation === "walk" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30"
+                }`}
+              >
+                Walk
+              </button>
+              <button
+                onClick={() => handleAnimationChange("run")}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold border transition ${
+                  animation === "run" ? "bg-white text-black border-white" : "bg-white/5 text-gray-400 border-white/10 hover:border-white/30"
+                }`}
+              >
+                Run
+              </button>
+              <button
+                onClick={toggleRotate}
+                className="flex-1 py-2 rounded-xl text-xs font-bold border border-white/10 bg-white/5 text-gray-400 hover:border-white/30 transition"
+              >
+                {autoRotate ? "Stop" : "Rotate"}
+              </button>
+            </div>
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-4">
           <span className="text-2xl font-black text-white">
             {selectedCape.price.toLocaleString("fa-IR")} تومان
           </span>
