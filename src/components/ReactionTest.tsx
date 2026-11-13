@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "./Button";
 
-const WORKER_URL = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
-
 interface LeaderboardEntry {
   id: string;
   name: string;
@@ -25,7 +23,7 @@ export function ReactionTest() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`${WORKER_URL}/api/leaderboard`);
+      const res = await fetch("/api/leaderboard");
       const data = await res.json();
       if (data.ok) setLeaderboard(data.entries);
     } catch (err) {
@@ -43,9 +41,8 @@ export function ReactionTest() {
       return;
     }
 
-    // 👇 چک کردن محدودیت ۵ بار در روز
     try {
-      const res = await fetch(`${WORKER_URL}/api/check-limit`, {
+      const res = await fetch("/api/check-limit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), contact: contactType }),
@@ -71,7 +68,7 @@ export function ReactionTest() {
 
     setErrorMsg("");
     setStep("waiting");
-    
+
     const randomDelay = Math.floor(Math.random() * 3000) + 2000;
     timerRef.current = setTimeout(() => {
       setStep("ready");
@@ -93,7 +90,7 @@ export function ReactionTest() {
       setStep("result");
 
       try {
-        await fetch(`${WORKER_URL}/api/leaderboard`, {
+        await fetch("/api/leaderboard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -103,8 +100,7 @@ export function ReactionTest() {
           }),
         });
         await fetchLeaderboard();
-        
-        // آپدیت تعداد بازی‌های باقی‌مانده
+
         if (remainingPlays !== null && remainingPlays > 0) {
           setRemainingPlays(remainingPlays - 1);
         }
@@ -161,7 +157,6 @@ export function ReactionTest() {
         </div>
       )}
 
-      {/* 🏆 لیدربورد هفتگی (با جایزه) */}
       <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 relative z-20 mt-8">
         <div className="mb-6">
           <h3 className="text-lg font-bold text-white mb-3 text-center">🏆 جوایز هفته</h3>
@@ -201,7 +196,7 @@ export function ReactionTest() {
                     <div>
                       <div className="text-sm font-bold text-white">{entry.name}</div>
                       <div className="text-[9px] text-diamond-muted">
-                        {entry.contact} • {new Date(entry.created_at).toLocaleDateString('fa-IR')}
+                        {entry.contact} • {new Date(entry.created_at).toLocaleDateString("fa-IR")}
                       </div>
                     </div>
                   </div>
@@ -213,7 +208,6 @@ export function ReactionTest() {
         </div>
       </div>
 
-      {/* 🏆 لیدربورد همیشگی (بدون جایزه) */}
       <div className="bg-diamond-panel border border-diamond-border rounded-xl p-6 relative z-20 mt-6">
         <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
           <span>🏅</span> ۱۰ نفر برتر (همیشگی)
@@ -240,7 +234,6 @@ export function ReactionTest() {
           </div>
         )}
       </div>
-
     </div>
   );
 }
