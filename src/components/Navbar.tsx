@@ -158,3 +158,64 @@ export function Navbar() {
                     </div>
                     {notifications.length === 0 ? (
                       <p className="p-4 text-center text-xs text-gray-500">نوتیفیکیشنی نیست</p>
+                    ) : (
+                      notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          onClick={() => handleNotificationClick(n)}
+                          className={`w-full text-right p-3 border-b border-white/5 hover:bg-white/5 transition ${!n.read_at ? "bg-white/[0.03]" : ""}`}
+                        >
+                          <p className={`text-xs ${!n.read_at ? "text-white font-semibold" : "text-gray-400"}`}>{n.message}</p>
+                          <p className="text-[10px] text-gray-600 mt-1">
+                            {new Date(n.created_at).toLocaleString("fa-IR")}
+                          </p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button onClick={handleDashboardClick} className="p-2 rounded-xl hover:bg-white/10 transition" title="Dashboard">
+              <img
+                src={document.documentElement.classList.contains("light") ? "/images/dashboard.png" : "/images/dashboard1.png"}
+                alt="Dashboard"
+                className="w-6 h-6 object-contain"
+              />
+            </button>
+            <button
+              onClick={() => setLang(lang === "en" ? "fa" : "en")}
+              className="hidden md:block rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white hover:border-white/50 transition"
+            >
+              {lang === "en" ? "FA | فارسی" : "EN | English"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* منوی موبایل */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-white/10 bg-[#050505]/95 backdrop-blur-md">
+        <div className="flex justify-around items-center py-2">
+          <NavLink to="/" end className={({ isActive }) => `flex flex-col items-center gap-1 p-2 transition-colors ${isActive ? "text-white" : "text-gray-500"}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+            <span className="text-[10px] font-medium">{t.nav.home}</span>
+          </NavLink>
+          <NavLink to="/#products" className="flex flex-col items-center gap-1 p-2 text-gray-500 hover:text-white transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z M3 6h18 M16 10a4 4 0 01-8 0" /></svg>
+            <span className="text-[10px] font-medium">فروشگاه</span>
+          </NavLink>
+          <NavLink to="/#challenge" className="flex flex-col items-center gap-1 p-2 text-gray-500 hover:text-white transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+            <span className="text-[10px] font-medium">چالش</span>
+          </NavLink>
+          <NavLink to="/#support" className="flex flex-col items-center gap-1 p-2 text-gray-500 hover:text-white transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 010 8h-1 M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z M6 1v3 M10 1v3 M14 1v3" /></svg>
+            <span className="text-[10px] font-medium">پشتیبانی</span>
+          </NavLink>
+        </div>
+      </nav>
+      <div className="h-16 lg:hidden" />
+    </>
+  );
+}
