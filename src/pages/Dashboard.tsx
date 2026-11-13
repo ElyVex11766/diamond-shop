@@ -1,106 +1,153 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "../components/Card";
+import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
+import { useLang } from "../i18n/LanguageContext";
 
-interface User {
+interface Order {
   id: string;
-  username: string;
-  phone?: string;
-  email?: string;
-  discord_id?: string;
-  discord_username?: string;
-  discord_avatar?: string;
+  date: string;
+  items: { name: string; price: number; quantity: number }[];
+  total: number;
+  status: "pending" | "paid";
+  expiresAt: string;
+  link: string;
 }
 
 export function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const { t } = useLang();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [now, setNow] = useState(Date.now());
 
+  // به‌روزرسانی تایمر هر ثانیه
   useEffect(() => {
-    const saved = localStorage.getItem("diamond_user");
-    if (saved) setUser(JSON.parse(saved));
-
-    const searchParams = new URLSearchParams(window.location.search);
-    const discordId = searchParams.get("discord_id");
-    if (discordId && saved) {
-      const currentUser = JSON.parse(saved) as User;
-      const updatedUser: User = {
-        ...currentUser,
-        discord_id: discordId,
-        discord_username: searchParams.get("discord_username") || currentUser.discord_username,
-        discord_avatar: searchParams.get("discord_avatar") || currentUser.discord_avatar,
-        email: searchParams.get("email") || currentUser.email,
-      };
-      localStorage.setItem("diamond_user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-    }
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  if (!user) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-gray-500">برای مشاهده حساب شخصی خود وارد شوید.</p>
-        <Link to="/login"><Button>ورود به حساب</Button></Link>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const savedUserStr = localStorage.getItem("diamond_user");
+    if (!savedUserStr) { navigate("/login"); return; }
+    const savedUser = JSON.parse(savedUserStr);
+    
+    // آپدیت اطلاعات دیسکورد از URL
+    const discordId = searchParams.get("discord_id");
+    const discordUsername = searchParams.get("discord_username");
+    const discordAvatar = searchParams.get("discord_avatar");
+    if (discordId && discordUsername) {
+      savedUser.discord_id = discordId;
+      savedUser.discord_username = discordUsername;
+      savedUser.discord_avatar = discordAvatar;
+      localStorage.setItem("diamond_user", JSON.stringify(savedUser));
+      navigate("/dashboard", { replace: true });
+    }
+    setUser(savedUser);
 
-  const displayName = user.discord_username || user.username;
+    // لود کردن سفارش‌ها
+    const savedOrders = localStorage.getItem(`diamond_orders_${savedUser.id}`);
+    if (savedOrders) setOrders(JSON.parse(savedOrders));
+  }, [navigate, searchParams]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("diamond_user");
+    navigate("/login");
+  };
+
+  if (!user) return null;
+
+  // محاسبه زمان باقی‌مانده
+  const getTimeLeft = (expiresAt: string) => {
+    const diff = new Date(expiresAt).getTime() - now;
+    if (diff <= 0) return "منقضی شده";
+    const m = Math.floor(diff / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 md:px-8 py-12 md:py-16">
-      <div className="mb-10 flex flex-col gap-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:flex-row md:items-center md:justify-between md:p-8">
-        <div className="flex items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-3xl border border-white/15 bg-white/5 flex items-center justify-center">
-            {user.discord_avatar ? (
-              <img src={user.discord_avatar} alt={`تصویر ${displayName}`} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-3xl">👤</span>
-            )}
-          </div>
-          <div>
-            <p className="mb-1 text-sm text-gray-500">حساب کاربری Zylox</p>
-            <h1 className="text-2xl md:text-3xl font-black text-white">سلام، {displayName}</h1>
-            <p className="mt-1 text-sm text-gray-500">اطلاعات حساب و سرویس‌های شما</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm text-emerald-300">
-          حساب شما فعال است
-        </div>
+    <div className="mx-auto max-w-7xl px-4 md:px-8 py-16">
+      <div className="flex justify-between items-center mb-8">
+        <SectionTitle title={`سلام، ${user.username}`} subtitle="به داشبورد خوش آمدید" />
+        <Button onClick={handleLogout} variant="secondary">خروج</Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <h2 className="mb-4 text-base font-bold text-white">پروفایل شما</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between gap-4"><span className="text-gray-500">نام کاربری</span><span className="text-white">{user.username}</span></div>
-            <div className="flex justify-between gap-4"><span className="text-gray-500">شماره موبایل</span><span className="text-white">{user.phone || "ثبت نشده"}</span></div>
-            <div className="flex justify-between gap-4"><span className="text-gray-500">ایمیل</span><span className="text-white">{user.email || "ثبت نشده"}</span></div>
+      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+        <aside className="rounded-2xl border border-white/10 bg-white/5 p-3 h-fit">
+          <ul className="space-y-1">
+            {["نمای کلی", "سفارش‌ها", "تنظیمات", "پشتیبانی"].map((s, i) => (
+              <li key={s}>
+                <button className={`w-full text-start rounded-lg px-3 py-2 text-sm ${i === 0 ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}>
+                  {s}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        <div className="grid gap-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="flex items-center gap-4">
+              <img src={user.discord_avatar || "/images/dashboard1.png"} alt="Avatar" className="w-16 h-16 rounded-full border border-white/20 object-cover" />
+              <div>
+                <p className="text-white font-bold text-lg">{user.username}</p>
+                <p className="text-xs text-gray-400 mt-1">{user.discord_username || "دیسکورد متصل نیست"}</p>
+              </div>
+            </Card>
+            <Card className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">وضعیت ربات</p>
+                <p className="text-emerald-400 font-bold mt-1">آنلاین</p>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+            </Card>
           </div>
-        </Card>
 
-        <Card>
-          <h2 className="mb-4 text-base font-bold text-white">اتصال دیسکورد</h2>
-          {user.discord_id ? (
-            <>
-              <p className="text-sm text-gray-400">متصل به {user.discord_username || "حساب دیسکورد"}</p>
-              <p className="mt-3 text-sm text-emerald-400">✓ اتصال با موفقیت انجام شده</p>
-            </>
-          ) : (
-            <>
-              <p className="mb-4 text-sm text-gray-500">برای تحویل خودکار سفارش‌ها، دیسکورد خود را متصل کنید.</p>
-              <a href={`/api/auth/discord?user_id=${encodeURIComponent(user.id)}`} className="text-sm text-white border-b border-white/30 hover:border-white pb-1">
-                اتصال دیسکورد ←
-              </a>
-            </>
-          )}
-        </Card>
+          {/* بخش سفارش‌ها */}
+          <Card>
+            <h3 className="text-lg font-bold text-white mb-4">سفارش‌های من</h3>
+            {orders.length === 0 ? (
+              <p className="text-center text-gray-500 py-6">هنوز سفارشی ثبت نکرده‌اید.</p>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((order) => (
+                  <div key={order.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-white font-bold">سفارش {order.id}</p>
+                        <p className="text-xs text-gray-500">{order.date}</p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-diamond-cyan font-bold">{order.total.toLocaleString("fa-IR")} تومان</p>
+                        <p className="text-xs text-yellow-400">⏳ {getTimeLeft(order.expiresAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {order.items.map((it, idx) => (
+                        <span key={idx} className="text-xs bg-white/10 px-2 py-1 rounded-md text-gray-300">
+                          {it.name} × {it.quantity}
+                        </span>
+                      ))}
+                    </div>
+                    <a href={order.link} className="inline-block mt-3 text-sm text-white underline decoration-white/30 hover:decoration-white">
+                      مشاهده جزئیات سفارش
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
 
-        <Card>
-          <h2 className="mb-4 text-base font-bold text-white">سفارش‌های شما</h2>
-          <p className="text-sm leading-7 text-gray-500">سفارش‌های ثبت‌شده و لینک‌های تحویل شما در این قسمت نمایش داده می‌شوند.</p>
-          <Link to="/#products" className="mt-4 inline-block text-sm text-white border-b border-white/30 hover:border-white pb-1">مشاهده محصولات ←</Link>
-        </Card>
+          <Card>
+            <h3 className="text-sm font-semibold text-gray-400 mb-3">تنظیمات سرور</h3>
+            <div className="rounded-lg border border-dashed border-white/10 p-8 text-center text-sm text-gray-500">
+              پیش‌نمایش تنظیمات — برای ویرایش یک سرور متصل کنید.
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
