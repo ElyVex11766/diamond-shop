@@ -1,6 +1,5 @@
 import { useCart } from "../context/CartContext";
 import { Button } from "./Button";
-import { useNavigate } from "react-router-dom";
 
 interface Props {
   isOpen: boolean;
@@ -8,8 +7,7 @@ interface Props {
 }
 
 export function CartSidebar({ isOpen, onClose }: Props) {
-  const { items, removeItem, updateQuantity } = useCart();
-  const navigate = useNavigate();
+  const { items, removeItem, updateQuantity, clearCart } = useCart();
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
@@ -53,8 +51,8 @@ export function CartSidebar({ isOpen, onClose }: Props) {
                 <span>مبلغ کل:</span>
                 <span className="text-diamond-cyan">{totalPrice.toLocaleString('fa-IR')} تومان</span>
               </div>
-              <Button onClick={() => { onClose(); navigate("/checkout"); }} className="w-full py-3 bg-white text-black hover:bg-gray-200">
-                ادامه خرید
+              <Button onClick={onClose} className="w-full py-3 bg-white text-black hover:bg-gray-200">
+                ادامه خرید (بستن سبد)
               </Button>
             </div>
           )}
