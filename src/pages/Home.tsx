@@ -88,7 +88,7 @@ export function Home() {
           <div className="relative flex justify-center z-10">
             <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl animate-pulse-glow" aria-hidden />
             <div className="relative animate-float-slow">
-              <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_40px_rgba(255,255,255,0.3)]" />
+              <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-[0_0_40px_rgba(255,255,255,0.3)]" />
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ export function Home() {
           onClick={() => setIsCartOpen(true)}
           className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all hover:scale-110"
         >
-          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <img src="/images/ShoppingCard.png" alt="Cart" className="w-8 h-8 object-contain" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
             {items.reduce((sum, i) => sum + i.quantity, 0)}
           </span>
