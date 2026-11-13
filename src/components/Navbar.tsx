@@ -6,7 +6,6 @@ import { LinkButton } from "./Button";
 export function Navbar() {
   const { t, lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -19,7 +18,6 @@ export function Navbar() {
     if (savedUser) setUser(JSON.parse(savedUser));
   }, [location.pathname]);
 
-  // 👇 لینک‌ها به بخش‌های صفحه اصلی اشاره می‌کنن
   const links = [
     { to: "/", label: t.nav.home },
     { to: "/#products", label: t.nav.shop },
@@ -40,13 +38,6 @@ export function Navbar() {
     }
   }, [location.pathname, lang]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
   const handleDashboardClick = () => {
     if (user) navigate("/dashboard");
     else navigate("/login");
@@ -58,7 +49,7 @@ export function Navbar() {
         
         {/* لوگو سمت راست */}
         <NavLink to="/" aria-label="Zylox home">
-          <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
+          <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
         </NavLink>
 
         {/* منو در وسط */}
@@ -82,31 +73,17 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* بخش سمت چپ (جستجو، آدمک، زبان) */}
+        {/* بخش سمت چپ */}
         <div className="hidden lg:flex items-center gap-4">
           
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="relative flex items-center">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={lang === "en" ? "Search..." : "جستجو..."}
-              className="w-48 rounded-xl border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-white placeholder-gray-500 outline-none focus:border-white/30 transition pr-10"
-            />
-            <button type="submit" className="absolute right-2 text-gray-400 hover:text-white transition">
-              {/* 👇 آیکون ذره‌بین */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </button>
-          </form>
-
           {/* دکمه آدمک (Dashboard) */}
           <button onClick={handleDashboardClick} className="p-2 rounded-xl hover:bg-white/10 transition" title="Dashboard">
-            {/* 👇 اینجا عکس خودت رو بذار */}
-            <img src="/images/dashboard.png" alt="Dashboard" className="w-6 h-6 object-contain" />
+            {/* 👇 عکس آدمک بر اساس تم */}
+            <img 
+              src={document.documentElement.classList.contains("light") ? "/images/dashboard.png" : "/images/dashboard1.png"} 
+              alt="Dashboard" 
+              className="w-6 h-6 object-contain" 
+            />
           </button>
 
           {/* زبان */}
@@ -126,7 +103,7 @@ export function Navbar() {
         </div>
 
         <button className="lg:hidden text-white text-2xl" onClick={() => setOpen((o) => !o)}>
-          {open ? "✕" : "☰"}
+          {open ? "✕" : "🗙"}
         </button>
       </div>
 
