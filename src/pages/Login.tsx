@@ -91,11 +91,7 @@ export function Login() {
       }
 
       if (mode === "login" && data.user) {
-  const userToSave = { ...data.user };
-  if (username === "elyas" && password === "elyas_gang_11766") {
-    userToSave.is_tester = true;
-  }
-  localStorage.setItem("diamond_user", JSON.stringify(userToSave));
+  localStorage.setItem("diamond_user", JSON.stringify(data.user));
 } else if (mode === "register" && data.user_id) {
   localStorage.setItem("diamond_user", JSON.stringify({ id: data.user_id, username, phone: normalizedPhone }));
 }
