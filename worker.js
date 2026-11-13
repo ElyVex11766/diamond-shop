@@ -12,6 +12,8 @@ const ADMIN_PASSWORD = "elyas_gang_11766";
 const TESTER_USERNAME = "elyas";
 const TESTER_PASSWORD = "elyas_gang_11766";
 
+const FAR_FUTURE = "2077-01-01T00:00:00.000Z"; // 👈 جایگزین NULL برای expires_at
+
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -260,7 +262,6 @@ export default {
         if (!user) return jsonResponse({ ok: false, error: "نام کاربری یا رمز عبور اشتباه است" }, 401);
         await updateUserIp(env.DB, user.id, userIp, userIpCountry);
 
-        // 👇 is_tester برای کاربر تست
         const isTester = user.username === TESTER_USERNAME && user.password === TESTER_PASSWORD;
 
         return jsonResponse({
@@ -412,7 +413,7 @@ export default {
       return jsonResponse({ ok: true, orders });
     }
 
-    // 13. Bot: «در حال انجام» — با safeJson (خطای 500 حل می‌شه)
+    // 13. Bot: «در حال انجام» — با FAR_FUTURE
     const startMatch = url.pathname.match(/^\/api\/bot\/orders\/([a-zA-Z0-9-]+)\/start$/);
     if (startMatch && method === "POST") {
       try {
@@ -427,8 +428,8 @@ export default {
         if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
 
         await env.DB.prepare(
-          "UPDATE shop_orders SET status = 'processing', started_at = ?, expires_at = NULL, admin_discord_id = ? WHERE token = ?"
-        ).bind(new Date().toISOString(), adminDiscordId, row.token).run();
+          "UPDATE shop_orders SET status = 'processing', started_at = ?, expires_at = ?, admin_discord_id = ? WHERE token = ?"
+        ).bind(new Date().toISOString(), FAR_FUTURE, adminDiscordId, row.token).run();
 
         return jsonResponse({ ok: true, message: "سفارش در حال انجام شد", order_url: `/order/${row.token}`, token: row.token });
       } catch (error) {
@@ -436,7 +437,7 @@ export default {
       }
     }
 
-    // 14. Bot: Complete — با safeJson و expires_at = NULL
+    // 14. Bot: Complete — با FAR_FUTURE
     const completeMatch = url.pathname.match(/^\/api\/bot\/orders\/([a-zA-Z0-9-]+)\/complete$/);
     if (completeMatch && method === "POST") {
       try {
@@ -456,8 +457,8 @@ export default {
 
         const now = new Date().toISOString();
         await env.DB.prepare(
-          "UPDATE shop_orders SET status = 'completed', delivery_info = ?, completed_at = ?, expires_at = NULL, admin_discord_id = ? WHERE token = ?"
-        ).bind(deliveryInfo, now, adminDiscordId, row.token).run();
+          "UPDATE shop_orders SET status = 'completed', delivery_info = ?, completed_at = ?, expires_at = ?, admin_discord_id = ? WHERE token = ?"
+        ).bind(deliveryInfo, now, FAR_FUTURE, adminDiscordId, row.token).run();
 
         if (row.user_id) {
           await env.DB.prepare(
