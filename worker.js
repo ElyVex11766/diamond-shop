@@ -1,3 +1,4 @@
+// ⚠️ وقتی Zylox.site وصل شد، این رو به "https://zylox.site" عوض کن
 const ALLOWED_ORIGIN = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
 const ORDER_EXPIRY_MINUTES = 30;
 const GUILD_ID = "1551236517442224319";
@@ -142,26 +143,16 @@ async function cleanupExpiredOrders(db) {
 
 function normalizeOrder(data, id, token, expiresAt, userId) {
   return {
-    id,
-    token,
-    user_id: userId || null,
+    id, token, user_id: userId || null,
     product: data.product || "Item",
     amount: Number(data.amount) || 1,
     unit_price: Number(data.unit_price) || 0,
     total: Number(data.total) || 0,
-    platform: "site",
-    platform_user_id: "site",
-    phone: "",
-    status: "pending",
-    discord_channel_id: null,
-    created_at: new Date().toISOString(),
-    expires_at: expiresAt,
-    edited_at: null,
-    edit_history: null,
-    delivery_info: null,
-    completed_at: null,
-    started_at: null,
-    admin_discord_id: null,
+    platform: "site", platform_user_id: "site", phone: "",
+    status: "pending", discord_channel_id: null,
+    created_at: new Date().toISOString(), expires_at: expiresAt,
+    edited_at: null, edit_history: null,
+    delivery_info: null, completed_at: null, started_at: null, admin_discord_id: null,
   };
 }
 
@@ -202,12 +193,10 @@ export default {
       });
     }
 
-    // 1. Health
     if (url.pathname === "/api/health" && method === "GET") {
       return jsonResponse({ ok: true, status: "operational", database: Boolean(env.DB) });
     }
 
-    // 2. Stats
     if (url.pathname === "/api/stats" && method === "GET") {
       try {
         if (!env.BOT_KEY) return jsonResponse({ ok: false, error: "BOT_KEY missing" }, 500);
@@ -225,60 +214,42 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 3. Register
     if (url.pathname === "/api/register" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { username, password, phone } = await request.json();
         const userIp = request.headers.get("CF-Connecting-IP") || "نامشخص";
         const userIpCountry = String(request.cf?.country || "XX").toUpperCase();
-
         if (!username || !password || username.length < 3 || password.length < 6) {
           return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است" }, 400);
         }
-
         await ensureUsersTable(env.DB);
         const userId = `user-${crypto.randomUUID()}`;
         const isIran = userIpCountry === "IR";
         const ipHistory = isIran ? JSON.stringify([userIp]) : null;
-
         try {
-          await env.DB.prepare(
-            "INSERT INTO users (id, username, password, phone, created_at, last_ip, last_ip_country, ip_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-          ).bind(userId, username, password, phone || null, new Date().toISOString(), isIran ? userIp : null, userIpCountry, ipHistory).run();
+          await env.DB.prepare("INSERT INTO users (id, username, password, phone, created_at, last_ip, last_ip_country, ip_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(userId, username, password, phone || null, new Date().toISOString(), isIran ? userIp : null, userIpCountry, ipHistory).run();
         } catch (e) { return jsonResponse({ ok: false, error: "این نام کاربری قبلاً ثبت شده است" }, 409); }
-
         return jsonResponse({ ok: true, user_id: userId, username }, 201);
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 4. Login
     if (url.pathname === "/api/login" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { username, password } = await request.json();
         const userIp = request.headers.get("CF-Connecting-IP") || "نامشخص";
         const userIpCountry = String(request.cf?.country || "XX").toUpperCase();
-
         if (!username || !password) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر است" }, 400);
-
         await ensureUsersTable(env.DB);
         const user = await env.DB.prepare("SELECT * FROM users WHERE username = ? AND password = ?").bind(username, password).first();
         if (!user) return jsonResponse({ ok: false, error: "نام کاربری یا رمز عبور اشتباه است" }, 401);
-
         await updateUserIp(env.DB, user.id, userIp, userIpCountry);
-
-        return jsonResponse({
-          ok: true,
-          user: {
-            id: user.id, username: user.username, email: user.email, phone: user.phone,
-            discord_id: user.discord_id, discord_username: user.discord_username, discord_avatar: user.discord_avatar,
-          },
-        });
+        return jsonResponse({ ok: true, user: { id: user.id, username: user.username, email: user.email, phone: user.phone, discord_id: user.discord_id, discord_username: user.discord_username, discord_avatar: user.discord_avatar } });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 5. Link Discord
     if (url.pathname === "/api/link-discord" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -290,29 +261,20 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 6. Auth Discord
     if (url.pathname === "/api/auth/discord" && method === "GET") {
       const userId = url.searchParams.get("user_id") || "";
-      const params = new URLSearchParams({
-        client_id: DISCORD_CLIENT_ID, redirect_uri: DISCORD_REDIRECT_URI,
-        response_type: "code", scope: "identify email guilds.join", state: userId,
-      });
+      const params = new URLSearchParams({ client_id: DISCORD_CLIENT_ID, redirect_uri: DISCORD_REDIRECT_URI, response_type: "code", scope: "identify email guilds.join", state: userId });
       return Response.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`, 302);
     }
 
-    // 7. Callback Discord
     if (url.pathname === "/api/auth/callback" && method === "GET") {
       const code = url.searchParams.get("code");
       const state = url.searchParams.get("state");
       if (!code) return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=no_code`, 302);
       try {
         const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            client_id: DISCORD_CLIENT_ID, client_secret: DISCORD_CLIENT_SECRET,
-            grant_type: "authorization_code", code, redirect_uri: DISCORD_REDIRECT_URI,
-          }),
+          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ client_id: DISCORD_CLIENT_ID, client_secret: DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: DISCORD_REDIRECT_URI }),
         });
         if (!tokenRes.ok) return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=token_failed`, 302);
         const tokenData = await tokenRes.json();
@@ -320,20 +282,16 @@ export default {
         if (!userRes.ok) return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=user_failed`, 302);
         const userData = await userRes.json();
         const avatarUrl = userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
-
         try {
           await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userData.id}`, {
-            method: "PUT",
-            headers: { "Authorization": `Bot ${env.BOT_KEY}`, "Content-Type": "application/json" },
+            method: "PUT", headers: { "Authorization": `Bot ${env.BOT_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ access_token: tokenData.access_token }),
           });
         } catch (err) { console.error(err); }
-
         if (state && env.DB) {
           await ensureUsersTable(env.DB);
           await env.DB.prepare("UPDATE users SET discord_id = ?, discord_username = ?, discord_avatar = ?, email = ? WHERE id = ?").bind(userData.id, userData.username, avatarUrl, userData.email || null, state).run();
         }
-
         const redirectUrl = new URL(`${ALLOWED_ORIGIN}/dashboard`);
         redirectUrl.searchParams.set("discord_id", userData.id);
         redirectUrl.searchParams.set("discord_username", userData.username);
@@ -343,7 +301,6 @@ export default {
       } catch (error) { return Response.redirect(`${ALLOWED_ORIGIN}/dashboard?error=server_error`, 302); }
     }
 
-    // 8. ساخت سفارش
     if (url.pathname === "/api/orders/create" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -353,87 +310,65 @@ export default {
         if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
           return jsonResponse({ ok: false, error: "سبد خرید خالی است" }, 400);
         }
-
         await ensureOrdersTable(env.DB);
-
         const orderId = `ORD-${crypto.randomUUID()}`;
         const token = generateToken();
         const expiresAt = new Date(Date.now() + ORDER_EXPIRY_MINUTES * 60 * 1000).toISOString();
         const total = data.items.reduce((sum, i) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
         const firstItem = data.items[0];
-
         const order = normalizeOrder(
           { product: firstItem?.name || "سفارش", amount: data.items.reduce((s, i) => s + (Number(i.quantity) || 1), 0), unit_price: Number(firstItem?.price) || 0, total },
           orderId, token, expiresAt, userId
         );
         order.items = data.items.map((i) => ({ id: i.id, name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1, image: i.image }));
-
-        await env.DB.prepare(
-          "INSERT INTO shop_orders (id, token, payload, status, created_at, expires_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        ).bind(orderId, token, JSON.stringify(order), "pending", order.created_at, expiresAt, userId).run();
-
+        await env.DB.prepare("INSERT INTO shop_orders (id, token, payload, status, created_at, expires_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .bind(orderId, token, JSON.stringify(order), "pending", order.created_at, expiresAt, userId).run();
         return jsonResponse({ ok: true, order_id: orderId, token, expires_at: expiresAt, order_url: `/order/${token}` }, 201);
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 9. سفارش‌های من
     if (url.pathname === "/api/orders/my-orders" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { user_id } = await request.json();
         if (!user_id) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
-
         await ensureOrdersTable(env.DB);
         await cleanupExpiredOrders(env.DB);
-
-        const result = await env.DB.prepare(
-          "SELECT * FROM shop_orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50"
-        ).bind(user_id).all();
-
+        const result = await env.DB.prepare("SELECT * FROM shop_orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50").bind(user_id).all();
         const orders = (result.results || []).map((row) => {
           const payload = JSON.parse(row.payload);
           return { ...payload, status: row.status, delivery_info: row.delivery_info, completed_at: row.completed_at, expires_at: row.expires_at, started_at: row.started_at, token: row.token, order_url: `/order/${row.token}` };
         });
-
         return jsonResponse({ ok: true, orders });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 10. جزئیات سفارش (با token یا id)
     const orderGetMatch = url.pathname.match(/^\/api\/orders\/([a-zA-Z0-9-]+)$/);
     if (orderGetMatch && method === "GET") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureOrdersTable(env.DB);
         await cleanupExpiredOrders(env.DB);
-
         const row = await findOrder(env.DB, orderGetMatch[1]);
         if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
-
         if (row.expires_at && new Date(row.expires_at) < new Date() && ["pending", "confirmed"].includes(row.status)) {
           return jsonResponse({ ok: false, error: "لینک منقضی شده", notFound: true }, 404);
         }
-
         const payload = JSON.parse(row.payload);
         return jsonResponse({ ok: true, order: { ...payload, status: row.status, delivery_info: row.delivery_info, completed_at: row.completed_at, expires_at: row.expires_at, started_at: row.started_at, token: row.token } });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 11. تأیید سفارش
     if (orderGetMatch && method === "PATCH") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureOrdersTable(env.DB);
-
         const row = await findOrder(env.DB, orderGetMatch[1]);
         if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
-
         if (row.expires_at && new Date(row.expires_at) < new Date() && ["pending", "confirmed"].includes(row.status)) {
           return jsonResponse({ ok: false, error: "لینک منقضی شده", notFound: true }, 404);
         }
-
         if (row.status !== "pending") return jsonResponse({ ok: false, error: "این سفارش قبلاً تأیید شده است" }, 400);
-
         await env.DB.prepare("UPDATE shop_orders SET status = 'confirmed' WHERE token = ?").bind(row.token).run();
         return jsonResponse({ ok: true, message: "سفارش تأیید شد" });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
@@ -445,71 +380,50 @@ export default {
       if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
       await ensureOrdersTable(env.DB);
       await cleanupExpiredOrders(env.DB);
-
-      const result = await env.DB.prepare(
-        "SELECT * FROM shop_orders WHERE status = 'confirmed' ORDER BY created_at ASC LIMIT 100"
-      ).all();
-
+      const result = await env.DB.prepare("SELECT * FROM shop_orders WHERE status = 'confirmed' ORDER BY created_at ASC LIMIT 100").all();
       const orders = (result.results || []).map((row) => {
         const payload = JSON.parse(row.payload);
         return { ...payload, token: row.token, status: row.status };
       });
-
       return jsonResponse({ ok: true, orders });
     }
 
-    // 13. Bot: «در حال انجام» (هم با token هم با id)
     const startMatch = url.pathname.match(/^\/api\/bot\/orders\/([a-zA-Z0-9-]+)\/start$/);
     if (startMatch && method === "POST") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
       if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
       await ensureOrdersTable(env.DB);
-
       const body = await request.json().catch(() => ({}));
       const adminDiscordId = body.admin_discord_id || "";
-
       const row = await findOrder(env.DB, startMatch[1]);
       if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
-
-      await env.DB.prepare(
-        "UPDATE shop_orders SET status = 'processing', started_at = ?, expires_at = NULL, admin_discord_id = ? WHERE token = ?"
-      ).bind(new Date().toISOString(), adminDiscordId, row.token).run();
-
+      await env.DB.prepare("UPDATE shop_orders SET status = 'processing', started_at = ?, expires_at = NULL, admin_discord_id = ? WHERE token = ?")
+        .bind(new Date().toISOString(), adminDiscordId, row.token).run();
       return jsonResponse({ ok: true, message: "سفارش در حال انجام شد", order_url: `/order/${row.token}`, token: row.token });
     }
 
-    // 14. Bot: Complete
     const completeMatch = url.pathname.match(/^\/api\/bot\/orders\/([a-zA-Z0-9-]+)\/complete$/);
     if (completeMatch && method === "POST") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
       if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
       await ensureOrdersTable(env.DB);
       await ensureNotificationsTable(env.DB);
-
       const body = await request.json().catch(() => ({}));
       const deliveryInfo = body.delivery_info || "";
       const adminDiscordId = body.admin_discord_id || "";
-
       if (!deliveryInfo) return jsonResponse({ ok: false, error: "اطلاعات تحویل خالی است" }, 400);
-
       const row = await findOrder(env.DB, completeMatch[1]);
       if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
-
       const now = new Date().toISOString();
-      await env.DB.prepare(
-        "UPDATE shop_orders SET status = 'completed', delivery_info = ?, completed_at = ?, admin_discord_id = ? WHERE token = ?"
-      ).bind(deliveryInfo, now, adminDiscordId, row.token).run();
-
+      await env.DB.prepare("UPDATE shop_orders SET status = 'completed', delivery_info = ?, completed_at = ?, admin_discord_id = ? WHERE token = ?")
+        .bind(deliveryInfo, now, adminDiscordId, row.token).run();
       if (row.user_id) {
-        await env.DB.prepare(
-          "INSERT INTO notifications (id, user_id, order_id, type, message, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-        ).bind(`notif-${crypto.randomUUID()}`, row.user_id, row.id, "order_completed", "سفارش شما کامل شد! برای مشاهده اطلاعات تحویل کلیک کنید.", now).run();
+        await env.DB.prepare("INSERT INTO notifications (id, user_id, order_id, type, message, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+          .bind(`notif-${crypto.randomUUID()}`, row.user_id, row.id, "order_completed", "سفارش شما کامل شد! برای مشاهده اطلاعات تحویل کلیک کنید.", now).run();
       }
-
       return jsonResponse({ ok: true, message: "سفارش تکمیل شد", order_url: `/order/${row.token}`, token: row.token });
     }
 
-    // 15. نوتیفیکیشن‌ها
     if (url.pathname === "/api/notifications" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -521,7 +435,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 16. Mark as read
     const readMatch = url.pathname.match(/^\/api\/notifications\/([^/]+)\/read$/);
     if (readMatch && method === "POST") {
       try {
@@ -532,7 +445,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 17. Admin Login
     if (url.pathname === "/api/admin/login" && method === "POST") {
       try {
         const { admin_username, admin_password } = await request.json();
@@ -541,7 +453,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 18. Admin Users
     if (url.pathname === "/api/admin/users" && method === "POST") {
       try {
         const { admin_username, admin_password } = await request.json();
@@ -553,7 +464,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 19. Admin Update User
     if (url.pathname === "/api/admin/update-user" && method === "POST") {
       try {
         const { admin_username, admin_password, user_id, new_username, new_password } = await request.json();
@@ -568,7 +478,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 20. Admin: سفارش‌های کاربر
     if (url.pathname === "/api/admin/user-orders" && method === "POST") {
       try {
         const { admin_username, admin_password, user_id } = await request.json();
@@ -577,7 +486,6 @@ export default {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureOrdersTable(env.DB);
         await cleanupExpiredOrders(env.DB);
-
         const result = await env.DB.prepare("SELECT * FROM shop_orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 100").bind(user_id).all();
         const orders = (result.results || []).map((row) => {
           const payload = JSON.parse(row.payload);
@@ -587,23 +495,18 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 21. Leaderboard: POST
     if (url.pathname === "/api/leaderboard" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         const { name, contact, time } = await request.json();
         if (!name || !time || time <= 0) return jsonResponse({ ok: false, error: "اطلاعات نامعتبر" }, 400);
-
         await ensureLeaderboardTable(env.DB);
         await ensureDailyPlaysTable(env.DB);
-
         const today = new Date().toISOString().split("T")[0];
         const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM daily_plays WHERE name = ? AND contact = ? AND played_at LIKE ?").bind(name, contact, `${today}%`).first();
         const dailyPlays = countResult?.count || 0;
         if (dailyPlays >= 5) return jsonResponse({ ok: false, limitReached: true, message: "شما امروز ۵ بار تست داده‌اید." }, 403);
-
         await env.DB.prepare("INSERT INTO daily_plays (id, name, contact, played_at) VALUES (?, ?, ?, ?)").bind(crypto.randomUUID(), name, contact, new Date().toISOString()).run();
-
         const existing = await env.DB.prepare("SELECT * FROM leaderboard WHERE name = ? AND contact = ?").bind(name, contact).first();
         if (existing) {
           if (time < existing.time) await env.DB.prepare("UPDATE leaderboard SET time = ?, created_at = ? WHERE id = ?").bind(time, new Date().toISOString(), existing.id).run();
@@ -611,12 +514,10 @@ export default {
           await env.DB.prepare("INSERT INTO leaderboard (id, name, contact, time, created_at) VALUES (?, ?, ?, ?, ?)").bind(crypto.randomUUID(), name, contact, time, new Date().toISOString()).run();
         }
         await env.DB.prepare(`DELETE FROM leaderboard WHERE id NOT IN (SELECT id FROM leaderboard ORDER BY time ASC LIMIT 10)`).run();
-
         return jsonResponse({ ok: true, message: "رکورد ثبت شد", remaining: 5 - dailyPlays - 1 }, 201);
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 22. Leaderboard: GET
     if (url.pathname === "/api/leaderboard" && method === "GET") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -626,7 +527,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 23. check-limit
     if (url.pathname === "/api/check-limit" && method === "POST") {
       try {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
