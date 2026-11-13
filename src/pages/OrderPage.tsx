@@ -46,13 +46,13 @@ export function OrderPage() {
 
   // 👇 اگه کاربر تست بود، تایمر از اول 0 و دکمه فعال
   const isTestUser = (() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("diamond_user") || "null");
-      return u?.username === TEST_USERNAME;
-    } catch {
-      return false;
-    }
-  })();
+  try {
+    const u = JSON.parse(localStorage.getItem("diamond_user") || "null");
+    return u?.is_tester === true;
+  } catch {
+    return false;
+  }
+})();
 
   const [confirmTimer, setConfirmTimer] = useState<number>(isTestUser ? 0 : CONFIRM_DELAY);
   const [canConfirm, setCanConfirm] = useState<boolean>(isTestUser);
