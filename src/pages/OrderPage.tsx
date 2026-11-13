@@ -2,6 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import { useLang } from "../i18n/LanguageContext";
+// داخل کامپوننت:
+const { lang } = useLang();
+const isEnglish = lang === "en";
 
 interface OrderItem {
   id: string;
