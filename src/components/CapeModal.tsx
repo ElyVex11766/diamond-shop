@@ -16,17 +16,16 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
-  const [animation, setAnimation] = useState<"idle" | "walk" | "run" | "elytra">("idle");
+  const [animation, setAnimation] = useState<"idle" | "walk" | "run">("idle");
   const [autoRotate, setAutoRotate] = useState(true);
   const [username, setUsername] = useState("ItzRealElyas");
   const [submittedUser, setSubmittedUser] = useState("ItzRealElyas");
+  const [isElytra, setIsElytra] = useState(false); // 👈 وضعیت الایترا
 
-  // 👇 متن‌های ترجمه شده
   const text = {
     stand: isEnglish ? "Stand" : "ایستاده",
     walk: isEnglish ? "Walk" : "راه رفتن",
     run: isEnglish ? "Run" : "دویدن",
-    elytra: isEnglish ? "Elytra" : "الایترا",
     rotate: isEnglish ? "Rotate" : "چرخش",
     stop: isEnglish ? "Stop" : "توقف",
     close: isEnglish ? "Close" : "بستن",
@@ -44,6 +43,7 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
+  // 👇 افکت اصلی برای ساخت ویوئر
   useEffect(() => {
     if (!isOpen || !selectedCape?.capeTexture || selectedCape.no3D) return;
     let cancelled = false;
@@ -65,6 +65,7 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
 
         viewerRef.current = viewer;
 
+        // 👇 لود کردن کیپ (به صورت پارچه)
         if (selectedCape.capeTexture) {
           viewer.loadCape(selectedCape.capeTexture).catch(() => {});
         }
@@ -88,7 +89,8 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
     };
   }, [isOpen, selectedCape, submittedUser]);
 
-  const handleAnimationChange = async (type: "idle" | "walk" | "run" | "elytra") => {
+  // 👇 تابع تغییر انیمیشن
+  const handleAnimationChange = async (type: "idle" | "walk" | "run") => {
     if (!viewerRef.current) return;
     const skinview3d = await import("skinview3d");
     
@@ -101,15 +103,29 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
         viewerRef.current.animation = new skinview3d.WalkingAnimation();
         break;
       case "run":
-        // 👇 انیمیشن دویدن اصلاح شد (سرعت و حالت عادی)
         const runAnim = new skinview3d.RunningAnimation();
-        runAnim.speed = 1; // سرعت عادی
+        runAnim.speed = 1;
         viewerRef.current.animation = runAnim;
         break;
-      case "elytra":
-        // 👇 برای شبیه‌سازی الایترا، فعلاً ایستاده می‌مونه
-        viewerRef.current.animation = new skinview3d.IdleAnimation();
-        break;
+    }
+  };
+
+  // 👇 تابع تغییر کیپ به الایترا
+  const toggleElytra = async () => {
+    if (!viewerRef.current || !selectedCape?.capeTexture) return;
+    
+    try {
+      if (!isElytra) {
+        // 👇 لود کردن به صورت الایترا
+        await viewerRef.current.loadCape(selectedCape.capeTexture, { backEquipment: "elytra" });
+        setIsElytra(true);
+      } else {
+        // 👇 برگشتن به حالت کیپ عادی
+        await viewerRef.current.loadCape(selectedCape.capeTexture);
+        setIsElytra(false);
+      }
+    } catch (err) {
+      console.error("Error toggling elytra:", err);
     }
   };
 
@@ -124,6 +140,7 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
     e.preventDefault();
     if (username.trim()) {
       setSubmittedUser(username.trim());
+      setIsElytra(false); // ریست کردن وضعیت الایترا
     }
   };
 
@@ -149,7 +166,7 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
         <h3 className="text-xl font-bold text-white mb-1">{selectedCape.name}</h3>
         <p className="text-sm text-gray-500 mb-6">{selectedCape.nameEn}</p>
 
-        {/* 👇 فرم نام کاربری */}
+        {/* فرم نام کاربری */}
         <form onSubmit={handleUserSubmit} className="flex gap-2 mb-4">
           <input
             type="text"
@@ -174,7 +191,7 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
         ) : (
           <div className="flex flex-col gap-4 mb-6">
             
-            {/* 👇 دکمه Rotate (بالا) */}
+            {/* دکمه Rotate (بالا) */}
             <div className="flex justify-end px-2">
                <button
                 onClick={toggleRotate}
@@ -186,7 +203,7 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
               </button>
             </div>
 
-            {/* 👇 مدل سه بعدی + دکمه الایترا */}
+            {/* مدل سه بعدی + دکمه الایترا */}
             <div className="relative bg-[#050505] rounded-2xl border border-white/5 p-4 min-h-[350px] flex items-center justify-center">
               {loading && (
                 <div className="flex flex-col items-center gap-3">
@@ -198,17 +215,17 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
               
               {/* 👇 دکمه Elytra (سمت چپ اسکین) */}
               <button
-                onClick={() => handleAnimationChange("elytra")}
+                onClick={toggleElytra}
                 className={`absolute top-4 left-4 w-12 h-12 rounded-xl border transition flex items-center justify-center ${
-                  animation === "elytra" ? "bg-white border-white" : "bg-white/5 border-white/10 hover:border-white/30"
+                  isElytra ? "bg-white border-white" : "bg-white/5 border-white/10 hover:border-white/30"
                 }`}
-                title={text.elytra}
+                title="Elytra"
               >
                 <img src="/images/elytra.png" alt="Elytra" className="w-8 h-8 object-contain" />
               </button>
             </div>
 
-            {/* 👇 دکمه‌های اصلی (پایین) */}
+            {/* دکمه‌های اصلی (پایین) */}
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => handleAnimationChange("idle")}
@@ -235,7 +252,6 @@ export function CapeModal({ isOpen, onClose, selectedCape }: Props) {
                 {text.run}
               </button>
               
-              {/* 👇 دکمه Stop (وسط) */}
               <button
                 onClick={() => {
                   if (viewerRef.current) {
