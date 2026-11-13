@@ -43,6 +43,7 @@ export function Home() {
         <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-20 md:py-32 grid gap-12 md:grid-cols-2 items-center w-full">
           
           <div className="space-y-6 z-10">
+            
             {/* 👇 Search Bar بالای متن */}
             <div className="relative max-w-md">
               <input
@@ -62,11 +63,16 @@ export function Home() {
               {t.stats.placeholder}
             </span>
             
-            {/* 👇 متن خوش‌آمدگویی (برگشت به حالت قبلی) */}
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight">
-              <span className="text-white block mb-2">{isEnglish ? "Welcome to Zylox Shop" : "به Zylox Shop خوش آمدید"}</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 block text-2xl md:text-4xl">
-                {isEnglish ? "Premium Gaming Store" : "فروشگاه پریمیوم گیمینگ"}
+            {/* 👇 این همون تگیه که خواستی */}
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">
+                به
+                </span>
+              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+                Zylox
+              </span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">
+                Shop خوش آمدید
               </span>
             </h1>
             
