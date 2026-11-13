@@ -41,16 +41,35 @@ export function Home() {
       <section id="top" className="relative overflow-hidden min-h-screen flex items-center">
         <div className="absolute inset-0 bg-radial-glow pointer-events-none" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-20 md:py-32 grid gap-12 md:grid-cols-2 items-center w-full">
+          
           <div className="space-y-6 z-10">
+            {/* 👇 Search Bar بالای متن */}
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                placeholder={isEnglish ? "Search products..." : "جستجوی محصول..."}
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-white/30 transition pr-12"
+              />
+              <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+            </div>
+
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
               {t.stats.placeholder}
             </span>
+            
+            {/* 👇 متن خوش‌آمدگویی (برگشت به حالت قبلی) */}
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight">
               <span className="text-white block mb-2">{isEnglish ? "Welcome to Zylox Shop" : "به Zylox Shop خوش آمدید"}</span>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 block text-2xl md:text-4xl">
                 {isEnglish ? "Premium Gaming Store" : "فروشگاه پریمیوم گیمینگ"}
               </span>
             </h1>
+            
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
             <div className="flex flex-wrap gap-3 mt-8">
               <LinkButton to="/#products">{t.hero.add}</LinkButton>
@@ -59,6 +78,7 @@ export function Home() {
               </LinkButton>
             </div>
           </div>
+
           <div className="relative flex justify-center z-10">
             <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl animate-pulse-glow" aria-hidden />
             <div className="relative animate-float-slow">
@@ -91,7 +111,7 @@ export function Home() {
         })}
       </div>
 
-      {/* بخش چالش (ReactionTest) */}
+      {/* بخش چالش */}
       <section id="challenge" className="py-20 bg-white/5">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">🎯 {isEnglish ? "Challenge" : "چالش"}</h2>
@@ -109,26 +129,23 @@ export function Home() {
         </div>
       </section>
 
-      {/* بخش پشتیبانی (Support) */}
+      {/* بخش پشتیبانی */}
       <section id="support" className="py-20 bg-white/5">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-8">{isEnglish ? "Support" : "پشتیبانی"}</h2>
           <div className="grid gap-6 md:grid-cols-3">
-            {/* روبیکا */}
             <a href="https://rubika.ir/Zylox_Shop" target="_blank" rel="noopener noreferrer" className="group block">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                 <img src="/images/rubika.png" alt="Rubika" className="w-16 h-16 object-contain mb-4" />
                 <span className="text-white font-bold">Rubika</span>
               </div>
             </a>
-            {/* تلگرام */}
             <a href="https://t.me/Zylox_Shop" target="_blank" rel="noopener noreferrer" className="group block">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                 <img src="/images/telegram.png" alt="Telegram" className="w-16 h-16 object-contain mb-4" />
                 <span className="text-white font-bold">Telegram</span>
               </div>
             </a>
-            {/* دیسکورد */}
             <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="group block">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                 <img src="/images/discord.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
@@ -145,7 +162,7 @@ export function Home() {
           onClick={() => setIsCartOpen(true)}
           className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all hover:scale-110"
         >
-          <img src="/images/ShoppingCard.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
             {items.reduce((sum, i) => sum + i.quantity, 0)}
           </span>
