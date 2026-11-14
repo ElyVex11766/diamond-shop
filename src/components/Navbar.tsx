@@ -98,7 +98,7 @@ export function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
           
           <NavLink to="/" aria-label="Zylox home">
-            <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
+            <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
           </NavLink>
 
           {/* 👇 منوی دسکتاپ */}
