@@ -51,8 +51,8 @@ export function Home() {
           <div className="space-y-6 z-10">
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">{t.stats.placeholder}</span>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
-              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">به Zylox</span>
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">Shop خوش آمدید</span>
+              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">به Zylox Shop</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">خوش آمدید</span>
             </h1>
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
             <div className="flex flex-wrap gap-3 mt-8">
