@@ -1,51 +1,32 @@
-import { Link } from "react-router-dom";
-import { ZyloxLogo } from "./ZyloxLogo";
-import { useLang } from "../i18n/LanguageContext";
-
-export function Footer() {
-  const { t } = useLang();
-  const year = new Date().getFullYear();
-
-  return (
-    <footer className="mt-20 border-t border-white/8 bg-[#070707] light:bg-[#eeeef0] light:border-black/8">
-      <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 grid gap-10 md:grid-cols-4">
-        <div>
-          <ZyloxLogo />
-          <p className="mt-4 text-sm text-gray-500 max-w-xs leading-relaxed">
-            {t.footer.tagline}
-          </p>
+{/* بخش پشتیبانی */}
+<section id="support" className="py-20 bg-white/5">
+  <div className="max-w-4xl mx-auto px-4 text-center">
+    <h2 className="text-3xl font-bold text-white mb-8">{isEnglish ? "Support" : "پشتیبانی"}</h2>
+    <div className="grid gap-6 md:grid-cols-3">
+      {/* روبیکا */}
+      <a href="https://rubika.ir/Zylox_Shop" target="_blank" rel="noopener noreferrer" className="group block">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+          <img src="/images/rubika.png" alt="Rubika" className="w-16 h-16 object-contain mb-4" />
+          <span className="text-white font-bold mb-1">Rubika</span>
+          <span className="text-xs text-gray-400">@MissMyPime</span>
         </div>
-
-        <div>
-          <h4 className="text-sm font-semibold text-white mb-4">{t.footer.product}</h4>
-          <ul className="space-y-2.5 text-sm text-gray-500">
-            <li><Link to="/features" className="hover:text-white transition">{t.nav.features}</Link></li>
-            <li><Link to="/shop" className="hover:text-white transition">{t.nav.shop}</Link></li>
-            <li><Link to="/dashboard" className="hover:text-white transition">{t.nav.dashboard}</Link></li>
-            <li><Link to="/status" className="hover:text-white transition">{t.nav.status}</Link></li>
-          </ul>
+      </a>
+      {/* تلگرام */}
+      <a href="https://t.me/Zylox_Support" target="_blank" rel="noopener noreferrer" className="group block">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+          <img src="/images/TelegramLogo.png" alt="Telegram" className="w-16 h-16 object-contain mb-4" />
+          <span className="text-white font-bold mb-1">Telegram</span>
+          <span className="text-xs text-gray-400">@Zylox_Support</span>
         </div>
-
-        <div>
-          <h4 className="text-sm font-semibold text-white mb-4">{t.footer.resources}</h4>
-          <ul className="space-y-2.5 text-sm text-gray-500">
-            <li><Link to="/docs" className="hover:text-white transition">{t.nav.docs}</Link></li>
-            <li><Link to="/docs" className="hover:text-white transition">{t.footer.support}</Link></li>
-          </ul>
+      </a>
+      {/* دیسکورد */}
+      <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="group block">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+          <img src="/images/DiscordLogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
+          <span className="text-white font-bold mb-1">Discord</span>
+          <span className="text-xs text-gray-400">@realelyas</span>
         </div>
-
-        <div>
-          <h4 className="text-sm font-semibold text-white mb-4">{t.footer.legal}</h4>
-          <ul className="space-y-2.5 text-sm text-gray-500">
-            <li><span className="opacity-50">{t.footer.tos}</span></li>
-            <li><span className="opacity-50">{t.footer.privacy}</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-white/5 py-5 text-center text-xs text-gray-600">
-        © {year} Zylox. {t.footer.rights}
-      </div>
-    </footer>
-  );
-}
+      </a>
+    </div>
+  </div>
+</section>
