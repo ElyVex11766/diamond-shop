@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useLang } from "../i18n/LanguageContext";
+import { GlobalSearch } from "./GlobalSearch"; // 👈 اضافه شد
 
 interface Notification {
   id: string;
@@ -39,9 +40,7 @@ export function Navbar() {
       });
       const data = await res.json();
       if (data.ok) setNotifications(data.notifications || []);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }, [user?.id]);
 
   useEffect(() => {
@@ -52,9 +51,7 @@ export function Navbar() {
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setShowNotif(false);
-      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotif(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -88,108 +85,64 @@ export function Navbar() {
 
   const handleNotificationClick = async (notif: Notification) => {
     if (!notif.read_at) {
-      try {
-        await fetch(`/api/notifications/${notif.id}/read`, { method: "POST" });
-      } catch {
-        // ignore
-      }
+      try { await fetch(`/api/notifications/${notif.id}/read`, { method: "POST" }); } catch {}
     }
     setShowNotif(false);
-    if (notif.order_id) {
-      // پیدا کردن token از لیست سفارش‌ها در صفحه بعد
-      navigate(`/dashboard`);
-    } else {
-      fetchNotifications();
-    }
+    if (notif.order_id) navigate(`/dashboard`);
+    else fetchNotifications();
   };
 
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050505]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
+          
           <NavLink to="/" aria-label="Zylox home">
-            <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
+            <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
           </NavLink>
 
+          {/* 👇 منوی دسکتاپ */}
           <nav ref={navRef} className="hidden lg:flex items-center gap-1 relative" aria-label="Main navigation">
-            <div
-              className="absolute bottom-0 h-8 bg-white/10 rounded-md transition-all duration-300 ease-out pointer-events-none border-b-2 border-white"
-              style={{ left: `${indicatorStyle.left}px`, width: `${indicatorStyle.width}px`, opacity: indicatorStyle.opacity }}
-            />
+            <div className="absolute bottom-0 h-8 bg-white/10 rounded-md transition-all duration-300 ease-out pointer-events-none border-b-2 border-white" style={{ left: `${indicatorStyle.left}px`, width: `${indicatorStyle.width}px`, opacity: indicatorStyle.opacity }} />
             {links.map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                data-path={l.to}
-                className={`relative z-10 px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
-                  location.pathname === l.to ? "text-white" : "text-gray-400 hover:text-white"
-                }`}
-                end={l.to === "/"}
-              >
+              <NavLink key={l.to} to={l.to} data-path={l.to} className={`relative z-10 px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${location.pathname === l.to ? "text-white" : "text-gray-400 hover:text-white"}`} end={l.to === "/"}>
                 {l.label}
               </NavLink>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            {/* نوتیفیکیشن */}
-            {user && (
-              <div className="relative" ref={notifRef}>
-                <button
-                  onClick={() => setShowNotif((v) => !v)}
-                  className="relative p-2 rounded-xl hover:bg-white/10 transition"
-                  title="Notifications"
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                  </svg>
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center px-1">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {showNotif && (
-                  <div className="absolute left-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-xl border border-white/15 bg-[#0a0a0a] shadow-2xl z-50">
-                    <div className="p-3 border-b border-white/10">
-                      <p className="text-xs font-bold text-white">نوتیفیکیشن‌ها</p>
-                    </div>
-                    {notifications.length === 0 ? (
-                      <p className="p-4 text-center text-xs text-gray-500">نوتیفیکیشنی نیست</p>
-                    ) : (
-                      notifications.map((n) => (
-                        <button
-                          key={n.id}
-                          onClick={() => handleNotificationClick(n)}
-                          className={`w-full text-right p-3 border-b border-white/5 hover:bg-white/5 transition ${!n.read_at ? "bg-white/[0.03]" : ""}`}
-                        >
+          {/* 👇 سرچ بار و دکمه‌های سمت راست */}
+          <div className="flex items-center gap-4">
+            <GlobalSearch /> {/* سرچ بار وسط قرار گرفت */}
+            
+            <div className="flex items-center gap-2">
+              {user && (
+                <div className="relative" ref={notifRef}>
+                  <button onClick={() => setShowNotif((v) => !v)} className="relative p-2 rounded-xl hover:bg-white/10 transition" title="Notifications">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center px-1">{unreadCount}</span>}
+                  </button>
+                  {showNotif && (
+                    <div className="absolute left-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-xl border border-white/15 bg-[#0a0a0a] shadow-2xl z-50">
+                      <div className="p-3 border-b border-white/10"><p className="text-xs font-bold text-white">نوتیفیکیشن‌ها</p></div>
+                      {notifications.length === 0 ? <p className="p-4 text-center text-xs text-gray-500">نوتیفیکیشنی نیست</p> : notifications.map((n) => (
+                        <button key={n.id} onClick={() => handleNotificationClick(n)} className={`w-full text-right p-3 border-b border-white/5 hover:bg-white/5 transition ${!n.read_at ? "bg-white/[0.03]" : ""}`}>
                           <p className={`text-xs ${!n.read_at ? "text-white font-semibold" : "text-gray-400"}`}>{n.message}</p>
-                          <p className="text-[10px] text-gray-600 mt-1">
-                            {new Date(n.created_at).toLocaleString("fa-IR")}
-                          </p>
+                          <p className="text-[10px] text-gray-600 mt-1">{new Date(n.created_at).toLocaleString("fa-IR")}</p>
                         </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-            <button onClick={handleDashboardClick} className="p-2 rounded-xl hover:bg-white/10 transition" title="Dashboard">
-              <img
-                src={document.documentElement.classList.contains("light") ? "/images/dashboard.png" : "/images/dashboard1.png"}
-                alt="Dashboard"
-                className="w-6 h-6 object-contain"
-              />
-            </button>
-            <button
-              onClick={() => setLang(lang === "en" ? "fa" : "en")}
-              className="hidden md:block rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white hover:border-white/50 transition"
-            >
-              {lang === "en" ? "FA | فارسی" : "EN | English"}
-            </button>
+              <button onClick={handleDashboardClick} className="p-2 rounded-xl hover:bg-white/10 transition" title="Dashboard">
+                <img src={document.documentElement.classList.contains("light") ? "/images/dashboard.png" : "/images/dashboard1.png"} alt="Dashboard" className="w-6 h-6 object-contain" />
+              </button>
+              <button onClick={() => setLang(lang === "en" ? "fa" : "en")} className="hidden md:block rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white hover:border-white/50 transition">
+                {lang === "en" ? "FA | فارسی" : "EN | English"}
+              </button>
+            </div>
           </div>
         </div>
       </header>
