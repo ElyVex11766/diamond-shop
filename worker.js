@@ -1,6 +1,6 @@
 // ⚠️ وقتی Zylox.site وصل شد، این رو به "https://zylox.site" عوض کن
 const ALLOWED_ORIGIN = "https://diamond-shop.p2opcnymwrvsjo3mmroimjhu.workers.dev";
-const ORDER_EXPIRY_MINUTES = 30;
+const ORDER_EXPIRY_MINUTES = 180; // تایمر ۳ ساعت
 const GUILD_ID = "1551236517442224319";
 const DISCORD_CLIENT_ID = "1557796189422755952";
 const DISCORD_CLIENT_SECRET = "haZNe0sJ5hB9zbG00ZVMfgsHM7KA65VD";
@@ -12,7 +12,7 @@ const ADMIN_PASSWORD = "elyas_gang_11766";
 const TESTER_USERNAME = "elyas";
 const TESTER_PASSWORD = "elyas_gang_11766";
 
-const FAR_FUTURE = "2077-01-01T00:00:00.000Z"; // 👈 جایگزین NULL برای expires_at
+const FAR_FUTURE = "2077-01-01T00:00:00.000Z"; // جایگزین NULL برای تایمر
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -43,7 +43,6 @@ function generateToken() {
   return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// 👇 خواندن body به صورت امن (حتی اگه خالی یا JSON نامعتبر باشه)
 async function safeJson(request) {
   try {
     const raw = await request.text();
@@ -218,14 +217,28 @@ export default {
         const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}?with_counts=true`, { headers: { "Authorization": `Bot ${env.BOT_KEY}` } });
         if (!guildResponse.ok) return jsonResponse({ ok: false, error: "Discord error" }, 500);
         const guildData = await guildResponse.json();
-        const botResponse = await fetch("https://discord.com/api/v10/users/@me", { headers: { "Authorization": `Bot ${env.BOT_KEY}` } });
-        const botOnline = botResponse.ok;
-        let botAvatar = null;
-        if (botOnline) {
-          const botData = await botResponse.json();
-          botAvatar = botData.avatar ? `https://cdn.discordapp.com/avatars/${botData.id}/${botData.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
-        }
-        return jsonResponse({ ok: true, stats: { totalMembers: guildData.approximate_member_count || 0, onlineMembers: guildData.approximate_presence_count || 0, totalServers: 1, botStatus: botOnline ? "online" : "offline", serverName: "Diamond BOT", botAvatar } });
+        return jsonResponse({ 
+          ok: true, 
+          stats: { 
+            totalMembers: guildData.approximate_member_count || 0, 
+            onlineMembers: guildData.approximate_presence_count || 0,
+            serverName: guildData.name || "Zylox Shop",
+            icon: guildData.icon ? `https://cdn.discordapp.com/icons/${guildData.id}/${guildData.icon}.png` : "/images/ZyloxLogoRemoveBG.png"
+          } 
+        });
+      } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
+    }
+
+    if (url.pathname === "/api/discord/messages" && method === "GET") {
+      try {
+        if (!env.BOT_KEY) return jsonResponse({ ok: false, error: "BOT_KEY missing" }, 500);
+        const channelId = "1551310628860334140";
+        const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=10`, {
+          headers: { "Authorization": `Bot ${env.BOT_KEY}` }
+        });
+        if (!res.ok) return jsonResponse({ ok: false, error: "Discord channel error" }, 500);
+        const messages = await res.json();
+        return jsonResponse({ ok: true, messages });
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
@@ -399,7 +412,6 @@ export default {
       } catch (error) { return jsonResponse({ ok: false, error: error.message }, 500); }
     }
 
-    // 12. Bot: لیست سفارش‌های confirmed (فقط لیست)
     if (url.pathname === "/api/bot/orders" && method === "GET") {
       if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
       if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
@@ -413,31 +425,24 @@ export default {
       return jsonResponse({ ok: true, orders });
     }
 
-    // 13. Bot: «در حال انجام» — با FAR_FUTURE
     const startMatch = url.pathname.match(/^\/api\/bot\/orders\/([a-zA-Z0-9-]+)\/start$/);
     if (startMatch && method === "POST") {
       try {
         if (!isBotAuthorized(request, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureOrdersTable(env.DB);
-
         const body = await safeJson(request);
         const adminDiscordId = body.admin_discord_id || "";
-
         const row = await findOrder(env.DB, startMatch[1]);
         if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
-
-        await env.DB.prepare(
-          "UPDATE shop_orders SET status = 'processing', started_at = ?, expires_at = ?, admin_discord_id = ? WHERE token = ?"
-        ).bind(new Date().toISOString(), FAR_FUTURE, adminDiscordId, row.token).run();
-
+        await env.DB.prepare("UPDATE shop_orders SET status = 'processing', started_at = ?, expires_at = ?, admin_discord_id = ? WHERE token = ?")
+          .bind(new Date().toISOString(), FAR_FUTURE, adminDiscordId, row.token).run();
         return jsonResponse({ ok: true, message: "سفارش در حال انجام شد", order_url: `/order/${row.token}`, token: row.token });
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500);
       }
     }
 
-    // 14. Bot: Complete — با FAR_FUTURE
     const completeMatch = url.pathname.match(/^\/api\/bot\/orders\/([a-zA-Z0-9-]+)\/complete$/);
     if (completeMatch && method === "POST") {
       try {
@@ -445,27 +450,19 @@ export default {
         if (!env.DB) return jsonResponse({ ok: false, error: "DB missing" }, 500);
         await ensureOrdersTable(env.DB);
         await ensureNotificationsTable(env.DB);
-
         const body = await safeJson(request);
         const deliveryInfo = body.delivery_info || "";
         const adminDiscordId = body.admin_discord_id || "";
-
         if (!deliveryInfo) return jsonResponse({ ok: false, error: "اطلاعات تحویل خالی است" }, 400);
-
         const row = await findOrder(env.DB, completeMatch[1]);
         if (!row) return jsonResponse({ ok: false, error: "سفارش پیدا نشد", notFound: true }, 404);
-
         const now = new Date().toISOString();
-        await env.DB.prepare(
-          "UPDATE shop_orders SET status = 'completed', delivery_info = ?, completed_at = ?, expires_at = ?, admin_discord_id = ? WHERE token = ?"
-        ).bind(deliveryInfo, now, FAR_FUTURE, adminDiscordId, row.token).run();
-
+        await env.DB.prepare("UPDATE shop_orders SET status = 'completed', delivery_info = ?, completed_at = ?, expires_at = ?, admin_discord_id = ? WHERE token = ?")
+          .bind(deliveryInfo, now, FAR_FUTURE, adminDiscordId, row.token).run();
         if (row.user_id) {
-          await env.DB.prepare(
-            "INSERT INTO notifications (id, user_id, order_id, type, message, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-          ).bind(`notif-${crypto.randomUUID()}`, row.user_id, row.id, "order_completed", "سفارش شما کامل شد! برای مشاهده اطلاعات تحویل کلیک کنید.", now).run();
+          await env.DB.prepare("INSERT INTO notifications (id, user_id, order_id, type, message, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+            .bind(`notif-${crypto.randomUUID()}`, row.user_id, row.id, "order_completed", "سفارش شما کامل شد! برای مشاهده اطلاعات تحویل کلیک کنید.", now).run();
         }
-
         return jsonResponse({ ok: true, message: "سفارش تکمیل شد", order_url: `/order/${row.token}`, token: row.token });
       } catch (error) {
         return jsonResponse({ ok: false, error: error.message }, 500);
