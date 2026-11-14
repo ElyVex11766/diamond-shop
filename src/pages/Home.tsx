@@ -187,4 +187,24 @@ export function Home() {
               </div>
             </a>
             <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="group block">
-              <div
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                <img src="/images/DiscordLogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
+                <span className="text-white font-bold mb-1">Discord</span>
+                <span className="text-xs text-gray-400">@realelyas</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {items.length > 0 && (
+        <button onClick={() => setIsCartOpen(true)} className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-white hover:bg-gray-200 shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center transition-all hover:scale-110">
+          <img src="/images/cart-icon.png" alt="Cart" className="w-8 h-8 object-contain" />
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">{items.reduce((sum, i) => sum + i.quantity, 0)}</span>
+        </button>
+      )}
+
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+    </>
+  );
+}
