@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useLang } from "../i18n/LanguageContext";
-import { GlobalSearch } from "./GlobalSearch"; // 👈 اضافه شد
 
 interface Notification {
   id: string;
@@ -98,10 +97,10 @@ export function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
           
           <NavLink to="/" aria-label="Zylox home">
-            <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
+            <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
           </NavLink>
 
-          {/* 👇 منوی دسکتاپ */}
+          {/* منوی دسکتاپ */}
           <nav ref={navRef} className="hidden lg:flex items-center gap-1 relative" aria-label="Main navigation">
             <div className="absolute bottom-0 h-8 bg-white/10 rounded-md transition-all duration-300 ease-out pointer-events-none border-b-2 border-white" style={{ left: `${indicatorStyle.left}px`, width: `${indicatorStyle.width}px`, opacity: indicatorStyle.opacity }} />
             {links.map((l) => (
@@ -111,38 +110,46 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* 👇 سرچ بار و دکمه‌های سمت راست */}
-          <div className="flex items-center gap-4">
-            <GlobalSearch /> {/* سرچ بار وسط قرار گرفت */}
+          <div className="flex items-center gap-2 md:gap-4">
             
-            <div className="flex items-center gap-2">
-              {user && (
-                <div className="relative" ref={notifRef}>
-                  <button onClick={() => setShowNotif((v) => !v)} className="relative p-2 rounded-xl hover:bg-white/10 transition" title="Notifications">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                    {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center px-1">{unreadCount}</span>}
-                  </button>
-                  {showNotif && (
-                    <div className="absolute left-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-xl border border-white/15 bg-[#0a0a0a] shadow-2xl z-50">
-                      <div className="p-3 border-b border-white/10"><p className="text-xs font-bold text-white">نوتیفیکیشن‌ها</p></div>
-                      {notifications.length === 0 ? <p className="p-4 text-center text-xs text-gray-500">نوتیفیکیشنی نیست</p> : notifications.map((n) => (
-                        <button key={n.id} onClick={() => handleNotificationClick(n)} className={`w-full text-right p-3 border-b border-white/5 hover:bg-white/5 transition ${!n.read_at ? "bg-white/[0.03]" : ""}`}>
-                          <p className={`text-xs ${!n.read_at ? "text-white font-semibold" : "text-gray-400"}`}>{n.message}</p>
-                          <p className="text-[10px] text-gray-600 mt-1">{new Date(n.created_at).toLocaleString("fa-IR")}</p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* 👇 عکس پروفایل داشبورد (آیکون) */}
+            <button onClick={handleDashboardClick} className="p-2 rounded-xl hover:bg-white/10 transition" title="Dashboard">
+              <img src="/images/dashboard.png" alt="Dashboard" className="w-6 h-6 object-contain" />
+            </button>
 
-              <button onClick={handleDashboardClick} className="p-2 rounded-xl hover:bg-white/10 transition" title="Dashboard">
-                <img src={document.documentElement.classList.contains("light") ? "/images/dashboard.png" : "/images/dashboard1.png"} alt="Dashboard" className="w-6 h-6 object-contain" />
-              </button>
-              <button onClick={() => setLang(lang === "en" ? "fa" : "en")} className="hidden md:block rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white hover:border-white/50 transition">
-                {lang === "en" ? "FA | فارسی" : "EN | English"}
-              </button>
-            </div>
+            {/* زنگوله نوتیفیکیشن */}
+            {user && (
+              <div className="relative" ref={notifRef}>
+                <button onClick={() => setShowNotif((v) => !v)} className="relative p-2 rounded-xl hover:bg-white/10 transition" title="Notifications">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center px-1">{unreadCount}</span>}
+                </button>
+                {showNotif && (
+                  <div className="absolute left-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-xl border border-white/15 bg-[#0a0a0a] shadow-2xl z-50">
+                    <div className="p-3 border-b border-white/10"><p className="text-xs font-bold text-white">نوتیفیکیشن‌ها</p></div>
+                    {notifications.length === 0 ? <p className="p-4 text-center text-xs text-gray-500">نوتیفیکیشنی نیست</p> : notifications.map((n) => (
+                      <button key={n.id} onClick={() => handleNotificationClick(n)} className={`w-full text-right p-3 border-b border-white/5 hover:bg-white/5 transition ${!n.read_at ? "bg-white/[0.03]" : ""}`}>
+                        <p className={`text-xs ${!n.read_at ? "text-white font-semibold" : "text-gray-400"}`}>{n.message}</p>
+                        <p className="text-[10px] text-gray-600 mt-1">{new Date(n.created_at).toLocaleString("fa-IR")}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* دکمه EN */}
+            <button onClick={() => setLang(lang === "en" ? "fa" : "en")} className="hidden md:block rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-gray-400 hover:text-white hover:border-white/50 transition">
+              {lang === "en" ? "FA" : "EN"}
+            </button>
+
+            {/* 👇 دکمه ورود (فقط وقتی کاربر لاگین نیست) */}
+            {!user && (
+              <NavLink to="/login" className="hidden md:flex items-center justify-center rounded-lg bg-white text-black px-4 py-1.5 text-xs font-bold hover:bg-gray-200 transition">
+                ورود
+              </NavLink>
+            )}
+
           </div>
         </div>
       </header>
