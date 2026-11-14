@@ -8,6 +8,7 @@ import { allProducts } from "./products";
 import { CartSidebar } from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
 import { DiscordFeed } from "../components/DiscordFeed";
+import { GlobalSearch } from "../components/GlobalSearch"; // 👈 اضافه شد
 
 export function Home() {
   const { t, lang } = useLang();
@@ -50,7 +51,6 @@ export function Home() {
           <div className="space-y-6 z-10 text-center md:text-right">
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">{t.stats.placeholder}</span>
             
-            {/* 👇 متن Welcome اصلاح شده طبق عکس */}
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight">
               <span className="block text-white mb-2">به</span>
               <span className="block bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_20px_rgba(56,189,248,0.3)]">Zylox Shop</span>
@@ -58,7 +58,15 @@ export function Home() {
             </h1>
             
             <p className="text-lg text-gray-400 max-w-xl mx-auto md:mx-0">{t.hero.subtitle}</p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-8">
+
+            {/* 👇 سرچ بار اومد اینجا (وسط صفحه اصلی) */}
+            <div className="flex justify-center md:justify-start pt-2 relative z-50">
+              <div className="w-full max-w-md">
+                <GlobalSearch />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
               <LinkButton to="/#products">{t.hero.add}</LinkButton>
               <LinkButton to="/#bot" variant="secondary">{t.nav.bot}</LinkButton>
             </div>
@@ -146,7 +154,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 👇 بخش قوانین (اضافه شده به آخر سایت قبل از پشتیبانی) */}
+      {/* بخش قوانین */}
       <section id="rules" className="py-20 bg-[#050505] border-y border-white/5">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-10">
@@ -192,7 +200,7 @@ export function Home() {
             </a>
             <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="group block">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                <img src="/images/discordllogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
+                <img src="/images/DiscordLogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
                 <span className="text-white font-bold mb-1">Discord</span>
                 <span className="text-xs text-gray-400">@realelyas</span>
               </div>
