@@ -4,25 +4,8 @@ import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
 
-interface OrderItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  token: string;
-  items?: OrderItem[];
-  total: number;
-  status: string;
-  expires_at?: string | null;
-  started_at?: string | null;
-  completed_at?: string | null;
-  created_at: string;
-  order_url: string;
-}
+interface OrderItem { id: string; name: string; price: number; quantity: number; }
+interface Order { id: string; token: string; items?: OrderItem[]; total: number; status: string; expires_at?: string | null; started_at?: string | null; completed_at?: string | null; created_at: string; order_url: string; }
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -39,10 +22,7 @@ export function Dashboard() {
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem("diamond_user");
-    if (!savedUserStr) {
-      navigate("/login");
-      return;
-    }
+    if (!savedUserStr) { navigate("/login"); return; }
     const savedUser = JSON.parse(savedUserStr);
 
     const discordId = searchParams.get("discord_id");
@@ -69,9 +49,7 @@ export function Dashboard() {
       });
       const data = await res.json();
       if (data.ok) setOrders(data.orders || []);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
     setLoadingOrders(false);
   }, [user?.id]);
 
@@ -90,17 +68,18 @@ export function Dashboard() {
     if (!expiresAt) return null;
     const diff = new Date(expiresAt).getTime() - now;
     if (diff <= 0) return "منقضی شده";
-    const m = Math.floor(diff / 60000);
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
     const s = Math.floor((diff % 60000) / 1000);
-    return `${m}:${s.toString().padStart(2, "0")}`;
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   const statusLabel = (status: string) => {
     switch (status) {
-      case "pending": return { text: "در انتظار تأیید", color: "text-yellow-400" };
-      case "confirmed": return { text: "تأیید شده", color: "text-sky-400" };
-      case "processing": return { text: "در حال انجام", color: "text-indigo-400" };
-      case "completed": return { text: "کامل شده", color: "text-emerald-400" };
+      case "pending": return { text: "در حال بررسی", color: "text-yellow-400" };
+      case "confirmed": return { text: "در حال بررسی", color: "text-yellow-400" };
+      case "processing": return { text: "در حال تکمیل", color: "text-indigo-400" };
+      case "completed": return { text: "تکمیل شد", color: "text-emerald-400" };
       default: return { text: status, color: "text-gray-400" };
     }
   };
@@ -159,7 +138,7 @@ export function Dashboard() {
               <div className="space-y-3">
                 {orders.map((order) => {
                   const st = statusLabel(order.status);
-                  const timeLeft = order.status === "processing" ? null : getTimeLeft(order.expires_at);
+                  const timeLeft = ["pending", "confirmed"].includes(order.status) ? getTimeLeft(order.expires_at) : null;
                   const itemsText = order.items?.map((i) => `${i.name} × ${i.quantity}`).join("، ") || "—";
                   return (
                     <div key={order.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
