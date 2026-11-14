@@ -14,8 +14,8 @@ export function DiscordMessages() {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-center text-gray-500 text-xs">در حال دریافت...</div>;
-  if (messages.length === 0) return <div className="text-center text-gray-500 text-xs">پیامی یافت نشد.</div>;
+  if (loading) return <div className="text-center text-gray-500 text-xs py-4">در حال دریافت...</div>;
+  if (messages.length === 0) return <div className="text-center text-gray-500 text-xs py-4">پیامی یافت نشد.</div>;
 
   return (
     <div className="space-y-4">
