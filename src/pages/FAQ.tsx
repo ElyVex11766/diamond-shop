@@ -10,25 +10,16 @@ const faqs = [
 
 export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
       <SectionTitle title="سوالات متداول" subtitle="پاسخ به سوالات پرتکرار شما" />
       <div className="space-y-4">
         {faqs.map((faq, i) => (
           <div key={i} className="border border-white/10 rounded-xl overflow-hidden bg-white/[0.02]">
-            <button
-              onClick={() => setOpenIndex(openIndex === i ? null : i)}
-              className="w-full flex justify-between items-center p-5 text-left text-white font-semibold hover:bg-white/5 transition"
-            >
-              {faq.q}
-              <span className="text-gray-500">{openIndex === i ? "−" : "+"}</span>
+            <button onClick={() => setOpenIndex(openIndex === i ? null : i)} className="w-full flex justify-between items-center p-5 text-left text-white font-semibold hover:bg-white/5 transition">
+              {faq.q} <span className="text-gray-500">{openIndex === i ? "−" : "+"}</span>
             </button>
-            {openIndex === i && (
-              <div className="p-5 pt-0 text-sm text-gray-400 leading-7">
-                {faq.a}
-              </div>
-            )}
+            {openIndex === i && <div className="p-5 pt-0 text-sm text-gray-400 leading-7">{faq.a}</div>}
           </div>
         ))}
       </div>
