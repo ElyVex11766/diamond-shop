@@ -7,7 +7,7 @@ import { ProductList } from "../components/ProductList";
 import { allProducts } from "./products";
 import { CartSidebar } from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
-import { DiscordFeed } from "../components/DiscordFeed"; // کامپوننت جدید
+import { DiscordFeed } from "../components/DiscordFeed";
 
 export function Home() {
   const { t, lang } = useLang();
@@ -44,17 +44,21 @@ export function Home() {
       <Sidebar />
       
       {/* Hero */}
-      <section id="top" className="relative overflow-hidden min-h-screen flex items-center">
+      <section id="top" className="relative overflow-hidden min-h-[85vh] flex items-center">
         <div className="absolute inset-0 bg-radial-glow pointer-events-none" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-20 md:py-32 grid gap-12 md:grid-cols-2 items-center w-full">
-          <div className="space-y-6 z-10">
+          <div className="space-y-6 z-10 text-center md:text-right">
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">{t.stats.placeholder}</span>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
-              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">به Zylox</span>
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">Shop خوش آمدید</span>
+            
+            {/* 👇 متن Welcome اصلاح شده طبق عکس */}
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight">
+              <span className="block text-white mb-2">به</span>
+              <span className="block bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_20px_rgba(56,189,248,0.3)]">Zylox Shop</span>
+              <span className="block text-white">خوش آمدید</span>
             </h1>
-            <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
-            <div className="flex flex-wrap gap-3 mt-8">
+            
+            <p className="text-lg text-gray-400 max-w-xl mx-auto md:mx-0">{t.hero.subtitle}</p>
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-8">
               <LinkButton to="/#products">{t.hero.add}</LinkButton>
               <LinkButton to="/#bot" variant="secondary">{t.nav.bot}</LinkButton>
             </div>
@@ -70,10 +74,6 @@ export function Home() {
 
       {/* بخش محصولات */}
       <div id="products" className="space-y-8 py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center mb-8">
-          <h2 className="text-4xl font-bold text-white mb-2">{isEnglish ? "Zylox Shop" : "فروشگاه Zylox"}</h2>
-          <p className="text-gray-400">{isEnglish ? "Premium products" : "محصولات پریمیوم"}</p>
-        </div>
         <div className="max-w-7xl mx-auto px-4 flex overflow-x-auto gap-2 pb-4 no-scrollbar mb-8">
           {categories.map((cat) => (
             <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`whitespace-nowrap rounded-xl px-5 py-2 text-sm font-semibold transition ${activeCategory === cat.id ? "bg-white text-black" : "border border-white/15 text-gray-400 hover:border-white/40 hover:text-white"}`}>
@@ -104,15 +104,12 @@ export function Home() {
           </div>
           
           <div className="grid lg:grid-cols-12 gap-6 items-start">
-            
-            {/* سمت چپ: اطلاعات سرور */}
             <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-24">
               <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] flex flex-col items-center justify-center text-center p-8 relative overflow-hidden shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#5865F2]/10 to-transparent pointer-events-none" />
                 <img src={discordStats.icon || "/images/ZyloxLogoRemoveBG.png"} alt="Zylox" className="w-24 h-24 mb-4 rounded-3xl bg-black/50 p-4 border border-white/10 shadow-2xl object-cover" />
                 <h3 className="text-xl font-bold text-white mb-2">{discordStats.serverName || "Zylox Shop"}</h3>
                 <p className="text-sm text-gray-400 mb-6">جامعه ما با اخبار، تخفیف‌ها و پشتیبانی</p>
-                
                 <div className="flex gap-6 mb-6">
                   <div className="flex flex-col items-center">
                     <span className="text-2xl font-black text-white">{discordStats.totalMembers.toLocaleString("fa-IR")}</span>
@@ -124,70 +121,52 @@ export function Home() {
                     <span className="text-xs text-gray-500">آنلاین</span>
                   </div>
                 </div>
-                
                 <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="w-full max-w-[200px] bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 rounded-xl transition shadow-lg shadow-[#5865F2]/20">
                   عضویت در سرور
                 </a>
               </div>
             </div>
 
-            {/* سمت راست: باکس بالا (اخبار) و باکس پایین (ویچر) */}
             <div className="lg:col-span-8 flex flex-col gap-6">
-              
-              {/* باکس اخبار */}
               <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 h-[350px] flex flex-col">
                 <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    آخرین اخبار (Announcements)
-                  </h3>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />آخرین اخبار (Announcements)</h3>
                 </div>
-                <div className="flex-1 overflow-y-auto pr-2">
-                  <DiscordFeed type="announcements" />
-                </div>
+                <div className="flex-1 overflow-y-auto pr-2"><DiscordFeed type="announcements" /></div>
               </div>
 
-              {/* باکس ویچر (نظرات) */}
               <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 h-[350px] flex flex-col">
                 <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    رضایت خریداران (Vouch)
-                  </h3>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />رضایت خریداران (Vouch)</h3>
                 </div>
-                <div className="flex-1 overflow-y-auto pr-2">
-                  <DiscordFeed type="vouch" />
-                </div>
+                <div className="flex-1 overflow-y-auto pr-2"><DiscordFeed type="vouch" /></div>
               </div>
-
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* بخش نظرات */}
-      <section id="reviews" className="py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-2">نظرات کاربران</h2>
-          <p className="text-gray-400 mb-10">تجربه خرید خود را با دیگران به اشتراک بگذارید.</p>
-          
-          <div className="grid gap-6 md:grid-cols-3 text-right">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-              <div className="flex items-center gap-1 text-yellow-400 mb-3">⭐⭐⭐⭐⭐</div>
-              <p className="text-sm text-gray-300 leading-7">"خیلی سریع تحویل داده شد، عالی بود. حتما بازم خرید می‌کنم."</p>
-              <p className="text-xs text-gray-500 mt-4">— کاربر: Amir</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-              <div className="flex items-center gap-1 text-yellow-400 mb-3">⭐⭐⭐⭐⭐</div>
-              <p className="text-sm text-gray-300 leading-7">"پشتیبانی خیلی خوبی دارن، تمام سوالاتمو جواب دادن."</p>
-              <p className="text-xs text-gray-500 mt-4">— کاربر: Reza</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-              <div className="flex items-center gap-1 text-yellow-400 mb-3">⭐⭐⭐⭐</div>
-              <p className="text-sm text-gray-300 leading-7">"قیمت‌ها منصفانه است، فقط کمی زمان تحویل طول کشید ولی در کل راضی‌ام."</p>
-              <p className="text-xs text-gray-500 mt-4">— کاربر: Sara</p>
-            </div>
+      {/* 👇 بخش قوانین (اضافه شده به آخر سایت قبل از پشتیبانی) */}
+      <section id="rules" className="py-20 bg-[#050505] border-y border-white/5">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-white mb-2">قوانین و شرایط</h2>
+            <p className="text-gray-400">لطفاً قبل از ثبت سفارش، قوانین زیر را با دقت مطالعه کنید.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { title: "تحویل سریع", desc: "تحویل معمولاً بین ۱ تا ۹۲ ساعت و بر اساس محصول و صف سفارش انجام می‌شود." },
+              { title: "تست اکانت", desc: "اکانت‌های پرمیوم تا ۲۴ ساعت بعد از تحویل فرصت تست دارند." },
+              { title: "مشکل اکانت", desc: "برای اکانت خراب باید مدارک کامل ارائه شود؛ بدون مدرک تعویض یا بازپرداخت تضمین نمی‌شود." },
+              { title: "پشتیبانی", desc: "قبل از ثبت شکایت با پشتیبانی تماس بگیرید؛ سفارش با سابقه تحویل و مدارک بررسی می‌شود." }
+            ].map((rule, idx) => (
+              <div key={idx} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />{rule.title}
+                </h3>
+                <p className="text-sm text-gray-400 leading-7">{rule.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
