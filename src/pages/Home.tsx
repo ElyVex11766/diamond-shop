@@ -7,7 +7,7 @@ import { ProductList } from "../components/ProductList";
 import { allProducts } from "./products";
 import { CartSidebar } from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
-import { DiscordMessages } from "../components/DiscordMessages"; // اضافه شد
+import { DiscordMessages } from "../components/DiscordMessages";
 
 export function Home() {
   const { t, lang } = useLang();
@@ -17,7 +17,6 @@ export function Home() {
   const [activeCategory, setActiveCategory] = useState("all");
   const location = useLocation();
 
-  // Stats for discord
   const [discordStats, setDiscordStats] = useState({ totalMembers: 0, onlineMembers: 0, serverName: "", icon: "" });
 
   useEffect(() => {
@@ -51,8 +50,8 @@ export function Home() {
           <div className="space-y-6 z-10">
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">{t.stats.placeholder}</span>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
-              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">به Zylox Shop</span>
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">خوش آمدید</span>
+              <span className="block text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">به Zylox</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600 mt-2">Shop خوش آمدید</span>
             </h1>
             <p className="text-lg text-gray-400 max-w-xl">{t.hero.subtitle}</p>
             <div className="flex flex-wrap gap-3 mt-8">
@@ -104,39 +103,64 @@ export function Home() {
             <p className="text-gray-400">به جامعه ما بپیوندید، اخبار و تخفیف‌ها را از دست ندهید.</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6 items-stretch">
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 flex flex-col h-[400px]">
-              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                آخرین پیام‌های سرور
-              </h3>
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+          <div className="grid lg:grid-cols-12 gap-6 items-stretch">
+            
+            {/* سمت چپ: اطلاعات سرور + بخش ویچر (Vouch) */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] flex flex-col items-center justify-center text-center p-8 relative overflow-hidden shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#5865F2]/10 to-transparent pointer-events-none" />
+                <img src={discordStats.icon || "/images/ZyloxLogoRemoveBG.png"} alt="Zylox" className="w-24 h-24 mb-4 rounded-3xl bg-black/50 p-4 border border-white/10 shadow-2xl" />
+                <h3 className="text-xl font-bold text-white mb-2">{discordStats.serverName || "Zylox Shop"}</h3>
+                <p className="text-sm text-gray-400 mb-6">جامعه ما با اخبار، تخفیف‌ها و پشتیبانی</p>
+                
+                <div className="flex gap-6 mb-6">
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-black text-white">{discordStats.totalMembers.toLocaleString("fa-IR")}</span>
+                    <span className="text-xs text-gray-500">عضو</span>
+                  </div>
+                  <div className="w-px bg-white/10" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-black text-emerald-400">{discordStats.onlineMembers.toLocaleString("fa-IR")}</span>
+                    <span className="text-xs text-gray-500">آنلاین</span>
+                  </div>
+                </div>
+                
+                <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="w-full max-w-[200px] bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 rounded-xl transition shadow-lg shadow-[#5865F2]/20">
+                  عضویت در سرور
+                </a>
+              </div>
+
+              {/* بخش ویچرها */}
+              <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 flex-1 flex flex-col">
+                <h3 className="text-sm font-bold text-white mb-4">✅ رضایت خریداران (Vouch)</h3>
+                <div className="space-y-3 flex-1 overflow-y-auto pr-2">
+                  <div className="text-xs text-gray-300 bg-white/5 p-3 rounded-lg border border-white/5">
+                    "اکانت ماینکرفت فوق‌العاده بود سریع تحویل دادید." <span className="text-gray-500 block mt-1">— Ali</span>
+                  </div>
+                  <div className="text-xs text-gray-300 bg-white/5 p-3 rounded-lg border border-white/5">
+                    "کیپ Hero عالی بود ممنون از پشتیبانی." <span className="text-gray-500 block mt-1">— Reza</span>
+                  </div>
+                  <div className="text-xs text-gray-300 bg-white/5 p-3 rounded-lg border border-white/5">
+                    "پک کیپ خریدم ارزون تر از همه جا!" <span className="text-gray-500 block mt-1">— Sara</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* سمت راست: پیام‌های دیسکورد (بزرگ‌تر) */}
+            <div className="lg:col-span-8 rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 flex flex-col h-[600px]">
+              <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  آخرین اخبار و پیام‌های سرور
+                </h3>
+                <span className="text-xs text-gray-500">به صورت زنده</span>
+              </div>
+              <div className="flex-1 overflow-y-auto pr-2">
                 <DiscordMessages />
               </div>
             </div>
-            
-            <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] flex flex-col items-center justify-center text-center p-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-[#5865F2]/10 to-transparent pointer-events-none" />
-              <img src={discordStats.icon || "/images/ZyloxLogoRemoveBG.png"} alt="Zylox" className="w-24 h-24 mb-4 rounded-3xl bg-black/50 p-4 border border-white/10 shadow-2xl" />
-              <h3 className="text-xl font-bold text-white mb-2">{discordStats.serverName || "Zylox Shop"}</h3>
-              <p className="text-sm text-gray-400 mb-8">جامعه ما با اخبار، تخفیف‌ها و پشتیبانی</p>
-              
-              <div className="flex gap-6 mb-8">
-                <div className="flex flex-col items-center">
-                  <span className="text-2xl font-black text-white">{discordStats.totalMembers.toLocaleString("fa-IR")}</span>
-                  <span className="text-xs text-gray-500">عضو</span>
-                </div>
-                <div className="w-px bg-white/10" />
-                <div className="flex flex-col items-center">
-                  <span className="text-2xl font-black text-emerald-400">{discordStats.onlineMembers.toLocaleString("fa-IR")}</span>
-                  <span className="text-xs text-gray-500">آنلاین</span>
-                </div>
-              </div>
-              
-              <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="w-full max-w-[200px] bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 rounded-xl transition shadow-lg shadow-[#5865F2]/20">
-                عضویت در سرور
-              </a>
-            </div>
+
           </div>
         </div>
       </section>
@@ -150,7 +174,7 @@ export function Home() {
           <div className="grid gap-6 md:grid-cols-3 text-right">
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
               <div className="flex items-center gap-1 text-yellow-400 mb-3">⭐⭐⭐⭐⭐</div>
-              <p className="text-sm text-gray-300 leading-7">"خیلی سریع تحویل داده شد، عالی بود. حتما بازم خرید می‌کنم."</p>
+              <p className="text-sm text-gray-300 leading-7">"خیلی سریع تحویل داده شد عالی بود. حتما بازم خرید می‌کنم."</p>
               <p className="text-xs text-gray-500 mt-4">— کاربر: Amir</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
@@ -188,7 +212,7 @@ export function Home() {
             </a>
             <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="group block">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                <img src="/images/DiscordLogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
+                <img src="/images/discordllogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
                 <span className="text-white font-bold mb-1">Discord</span>
                 <span className="text-xs text-gray-400">@realelyas</span>
               </div>
