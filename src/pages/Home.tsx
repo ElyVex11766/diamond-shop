@@ -192,7 +192,7 @@ export function Home() {
             </a>
             <a href="https://discord.gg/aV7Q437hzs" target="_blank" rel="noopener noreferrer" className="group block">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center transition-all duration-300 group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                <img src="/images/DiscordLogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
+                <img src="/images/discordllogo.png" alt="Discord" className="w-16 h-16 object-contain mb-4" />
                 <span className="text-white font-bold mb-1">Discord</span>
                 <span className="text-xs text-gray-400">@realelyas</span>
               </div>
