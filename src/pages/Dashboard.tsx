@@ -4,6 +4,13 @@ import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { Button } from "../components/Button";
 
+// پروکسی برای عکس دیسکورد در داشبورد
+const proxyImage = (url: string | null) => {
+  if (!url) return "/images/dashboard1.png";
+  if (url.startsWith("/")) return url;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(url.replace("https://", ""))}`;
+};
+
 interface OrderItem { id: string; name: string; price: number; quantity: number; }
 interface Order { id: string; token: string; items?: OrderItem[]; total: number; status: string; expires_at?: string | null; started_at?: string | null; completed_at?: string | null; created_at: string; order_url: string; }
 
@@ -43,8 +50,7 @@ export function Dashboard() {
     setLoadingOrders(true);
     try {
       const res = await fetch("/api/orders/my-orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: user.id }),
       });
       const data = await res.json();
@@ -107,7 +113,8 @@ export function Dashboard() {
         <div className="grid gap-6">
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="flex items-center gap-4">
-              <img src={user.discord_avatar || "/images/dashboard1.png"} alt="Avatar" className="w-16 h-16 rounded-full border border-white/20 object-cover" />
+              {/* 👈 عکس پروفایل با پروکسی */}
+              <img src={proxyImage(user.discord_avatar)} alt="Avatar" className="w-16 h-16 rounded-full border border-white/20 object-cover" />
               <div>
                 <p className="text-white font-bold text-lg">{user.username}</p>
                 <p className="text-xs text-gray-400 mt-1">{user.discord_username || "دیسکورد متصل نیست"}</p>
