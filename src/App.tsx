@@ -15,6 +15,7 @@ import { OrderPage } from "./pages/OrderPage";
 import { Admin } from "./pages/Admin";
 import { AdminUser } from "./pages/AdminUser";
 import { Challenge } from "./pages/Challenge";
+import { FAQ } from "./pages/FAQ"; // اضافه شد
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/features" element={<Features />} />
               <Route path="/docs" element={<Docs />} />
+              <Route path="/faq" element={<FAQ />} /> {/* اضافه شد */}
               <Route path="/shop" element={<Shop />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/status" element={<Status />} />
