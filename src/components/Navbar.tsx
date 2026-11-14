@@ -108,7 +108,7 @@ export function Navbar() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050505]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
           <NavLink to="/" aria-label="Zylox home">
-            <img src="/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
+            <img src="/images/ZyloxLogoRemoveBG.png" alt="Zylox Logo" className="h-8 w-auto object-contain" />
           </NavLink>
 
           <nav ref={navRef} className="hidden lg:flex items-center gap-1 relative" aria-label="Main navigation">
